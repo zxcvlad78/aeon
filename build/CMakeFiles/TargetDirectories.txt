@@ -1,3 +1,0 @@
-C:/dev/cpp/test_engine/build/CMakeFiles/Vladot.dir
-C:/dev/cpp/test_engine/build/CMakeFiles/ALL_BUILD.dir
-C:/dev/cpp/test_engine/build/CMakeFiles/ZERO_CHECK.dir
