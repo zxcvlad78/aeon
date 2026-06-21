@@ -1,10 +1,6 @@
 #pragma once
-
-#include <SFML/Graphics.hpp>
 #include "Resources.hpp"
-#include <vector>
-#include <map>
-#include <string>
+
 
 struct Position {
     float x = 0.0f;
@@ -38,12 +34,12 @@ struct Camera {
 struct Sprite {
     sf::Sprite sprite;
 
-    Sprite(const sf::Texture& texture) : sprite(texture) {}
+    Sprite(entt::resource<sf::Texture> texture) : sprite(*texture) {}
 };
 
 struct SpriteAnimation {
-    const SpritesheetResource* spritesheet = nullptr;
-    const AnimationResource* current_animation = nullptr;
+    entt::resource<Spritesheet::Resource> spritesheet;
+    const Animation::Resource* current_animation = nullptr;
     
     unsigned int current_frame_idx = 0;
     float time_accumulator = 0.0f;

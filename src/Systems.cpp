@@ -1,6 +1,5 @@
-#include <entt/entt.hpp>
+#include "Systems.hpp"
 #include "Components.hpp"
-#include <iostream>
 
 void input_system(entt::registry& registry) {
     auto view = registry.view<MoveDirection>();
@@ -79,7 +78,7 @@ void sprite_animation_control_system(entt::registry& registry) {
 
         auto it = sprite_anim.spritesheet->animations.find(target_anim_name);
         if (it != sprite_anim.spritesheet->animations.end()) {
-            const AnimationResource* target_animation_ptr = &it->second;
+            const Animation::Resource* target_animation_ptr = &it->second;
 
             if (sprite_anim.current_animation != target_animation_ptr) {
                 sprite_anim.play(target_anim_name);

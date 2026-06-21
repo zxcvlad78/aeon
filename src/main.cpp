@@ -1,10 +1,6 @@
-#include <SFML/Graphics.hpp>
-#include <entt/entt.hpp>
 #include <termcolor/termcolor.hpp>
-#include <iostream>
-
 #include "ResourceLoader.hpp"
-#include "Components.hpp"
+#include "Systems.hpp"
 
 void input_system(entt::registry& registry);
 void movement_system(entt::registry& registry, float dt);
@@ -24,13 +20,6 @@ int main() {
     ResourceLoader resourceloader;
     
     sf::Clock clock;
-
-    std::vector<int> level = {
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0,
-        0, 0, 0, 0
-    };
 
 
     sf::Font main_font;
@@ -58,6 +47,9 @@ int main() {
             registry.emplace<MoveDirection>(player);
             registry.emplace<SpriteAnimationControl>(player);
 
+        Sprite sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/vlad/atlas.png"));
+            registry.emplace<Sprite>(player, sprite);
+        
         Camera player_camera;
             player_camera.view = sf::View(
                     {0.f, 0.f},
@@ -65,12 +57,11 @@ int main() {
                 );
                     
             registry.emplace<Camera>(player, player_camera);
+            
 
-        Sprite player_sprite(*resourceloader.load_texture("res/textures/vlad/atlas.png"));
-            registry.emplace<Sprite>(player, player_sprite);
-
+            
             SpriteAnimation sprite_anim;
-                sprite_anim.spritesheet = resourceloader.load_spritesheet("res/player_spritesheet.json");
+                sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/player_spritesheet.json");
                 registry.emplace<SpriteAnimation>(player, sprite_anim);
     }
     
@@ -78,8 +69,7 @@ int main() {
     {
         auto floor = registry.create();
             registry.emplace<Position>(floor, 0.f, 0.f);
-            Sprite floor_sprite(*resourceloader.load_texture("res/textures/floor.png"));
-                registry.emplace<Sprite>(floor, floor_sprite);
+            registry.emplace<Sprite>(floor, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/floor.png"));
     }
 
     while (window.isOpen())

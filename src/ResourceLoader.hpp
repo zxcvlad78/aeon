@@ -1,23 +1,26 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
-#include <SFML/Audio/SoundBuffer.hpp>
 #include "Resources.hpp"
+#include <entt/resource/cache.hpp>
 
-#include <vector>
-#include <string>
-#include <stdexcept>
-#include <unordered_map>
-#include <memory>
+//#include <string>
+//#include <stdexcept>
+//#include <memory>
 
 
 class ResourceLoader {
 private:
     std::tuple<
         entt::resource_cache<sf::Texture, sf::TextureLoader>,
+        entt::resource_cache<sf::SoundBuffer, sf::SoundBufferLoader>,
         entt::resource_cache<Spritesheet::Resource, Spritesheet::Loader>,
         entt::resource_cache<TileSet::Resource, TileSet::Loader>
     > m_caches;
+
+    template <typename T, typename Loader>
+    auto& get_cache() {
+        return std::get<entt::resource_cache<T, Loader>>(m_caches);
+    }
 
 public:
     ResourceLoader() = default;
@@ -25,25 +28,20 @@ public:
     ResourceLoader(const ResourceLoader&) = delete;
     ResourceLoader& operator=(const ResourceLoader&) = delete;
 
-    const sf::Texture* load_texture(const std::string& path);
-    const sf::SoundBuffer* load_sound(const std::string& path);
-    const SpritesheetResource* load_spritesheet(const std::string& path);
+    template <typename T, typename Loader, typename ...Args>
+    entt::resource<T> load(const std::string path, Args&&... args) {
+        auto id = entt::hashed_string{path.c_str()};
+        auto& cache = get_cache<T, Loader>();
 
-    const sf::Texture& get_texture(const std::string& path) const {
-        auto it = m_textures.find(path);
-        if (it == m_textures.end()) throw std::runtime_error("Texture not found: " + path);
-        return *it->second;
+        auto result = cache.load(id, std::forward<Args>(args)..., path);
+        return result.first->second;
     }
 
-    const sf::SoundBuffer& get_sound(const std::string& path) const {
-        auto it = m_sounds.find(path);
-        if (it == m_sounds.end()) throw std::runtime_error("Audio not found: " + path);
-        return *it->second;
+    template<typename T, typename Loader>
+    entt::resource<T> get(const std::string& path) {
+        auto id = entt::hashed_string{path.c_str()};
+        auto& cache = get_cache<T, Loader>();
+        return cache.handle(id);
     }
 
-    const SpritesheetResource& get_spritesheet(const std::string& path) const {
-        auto it = m_spritesheets.find(path);
-        if (it == m_spritesheets.end()) throw std::runtime_error("Spritesheet not found: " + path);
-        return *it->second;
-    }
 };
