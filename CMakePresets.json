@@ -1,0 +1,14 @@
+{
+    "version": 3,
+    "configurePresets": [
+        {
+            "name": "vcpkg-default",
+            "displayName": "vcpkg auto preset",
+            "description": "auto config vcpkg",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+            }
+        }
+    ]
+}

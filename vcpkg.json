@@ -1,0 +1,10 @@
+{
+  "name": "vladot",
+  "version-string": "0.1.0",
+  "dependencies": [
+    "sfml",
+    "entt",
+    "termcolor",
+    "nlohmann-json"
+  ]
+}
