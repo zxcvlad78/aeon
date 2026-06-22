@@ -3,11 +3,6 @@
 #include "Resources.hpp"
 #include <entt/resource/cache.hpp>
 
-//#include <string>
-//#include <stdexcept>
-//#include <memory>
-
-
 class ResourceLoader {
 private:
     std::tuple<

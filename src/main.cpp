@@ -45,7 +45,12 @@ int main() {
         registry.emplace<Health>(player, 100.f, 100.f);
         registry.emplace<MoveSpeed>(player, 100.0f);
         
-
+        Hitbox player_hitbox;
+            player_hitbox.width = 16.f;
+            player_hitbox.height = 32.f;
+            player_hitbox.offset_x = -8.f;
+            player_hitbox.offset_y = -16.f;
+            registry.emplace<Hitbox>(player, player_hitbox);
 
         Sprite sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/vlad/atlas.png"));
             sprite.offset = {-8.f, -16.f};
@@ -76,11 +81,34 @@ int main() {
             
     }
     
+    //Projectile
+
+    {
+        auto test_projectile = registry.create();
+        registry.emplace<Transform>(test_projectile);
+
+
+        Hitbox projectile_hitbox;
+            projectile_hitbox.width = 8.f;
+            projectile_hitbox.height = 8.f;
+            projectile_hitbox.offset_x = -8.f;
+            projectile_hitbox.offset_y = -8.f;
+            registry.emplace<Hitbox>(test_projectile, projectile_hitbox);
+        Sprite projectile_sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/t_projectile/atlas.png"));
+            projectile_sprite.offset = {-8.f, -8.f};
+            registry.emplace<Sprite>(test_projectile, projectile_sprite);
+        SpriteAnimation projectile_sprite_anim;
+            projectile_sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/t_projectile_spritesheet.json");
+            projectile_sprite_anim.play("idle");
+            registry.emplace<SpriteAnimation>(test_projectile, projectile_sprite_anim);
+    }
+
+
     //Floor
     {
         auto floor = registry.create();
-            registry.emplace<Transform>(floor);
-            registry.emplace<Sprite>(floor, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/floor.png"));
+        registry.emplace<Transform>(floor);
+        registry.emplace<Sprite>(floor, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/floor.png"));
     }
 
     while (window.isOpen())

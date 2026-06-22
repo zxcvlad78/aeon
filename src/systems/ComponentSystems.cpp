@@ -131,6 +131,10 @@ void render_system(entt::registry& registry, sf::RenderWindow& window) {
         sprite.sprite.setScale({transform.scale.x, transform.scale.y});
         window.draw(sprite.sprite);
     }
+
+    for (auto [entity, transform, hitbox] : registry.view<Transform, Hitbox>().each()) {
+
+    }
 }
 
 
@@ -152,6 +156,7 @@ void projectile_system(entt::registry& registry, float dt) {
 
             if (aabb1.findIntersection(aabb2)) {
                 health2.apply_damage(projectile1.damage); //apply damage
+                std::cout << "sex" << std::endl;
             }
 
         }
@@ -164,4 +169,5 @@ void projectile_system(entt::registry& registry, float dt) {
 }
 
 void hitbox_collision_system(entt::registry& registry) {
+    
 }
