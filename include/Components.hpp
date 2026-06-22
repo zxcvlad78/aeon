@@ -1,10 +1,12 @@
 #pragma once
+#include <entt/entt.hpp>
 #include "Resources.hpp"
 
 
-struct Position {
-    float x = 0.0f;
-    float y = 0.0f;
+struct Transform {
+    sf::Vector2f position;
+    sf::Angle rotation_degrees;
+    sf::Vector2f scale = {1.f, 1.f};
 };
 
 struct Velocity {
@@ -14,15 +16,61 @@ struct Velocity {
 };
 
 struct MoveSpeed {
-    float value = 10.0f;
+    float value = 10.f;
 };
 
-struct MoveDirection {
-    bool up = false;
-    bool down = false;
-    bool left = false;
-    bool right = false;
+struct Health {
+private:
+    float value = 100.f;
+    float max_value = 100.f;
+
+public:
+    Health(float v, float mv) { value = v, max_value = mv; }
+
+
+    void set_max_value(float new_max_value) {
+        max_value = new_max_value;
+        if (max_value < 0.f) {
+            max_value = 0.f;
+        }
+    }
+    float get_max_value() { return max_value; }
+
+    void set_value(float new_value) {
+        value = new_value;
+        if (value > max_value) {
+            value = max_value;
+        } else if (value < 0.f) {
+            value = 0.f;
+            //death
+        }
+    }
+
+    float get_value() { return value; }
+
+    void apply_damage(float damage) {
+        set_value(value - damage);
+    }
+
+    void apply_heal(float heal) {
+        set_value(value + heal);
+    }
 };
+
+
+struct Hitbox {
+    float width, height = 0.f;
+    float offset_x, offset_y = 0.f;
+};
+
+struct Projectile {
+    float damage = 10.f;
+    float lifetime = 2.f;
+    entt::entity source = entt::null;
+    
+    float time_elapsed = 0.f;
+};
+
 
 struct Camera {
     sf::View view;
@@ -33,6 +81,7 @@ struct Camera {
 
 struct Sprite {
     sf::Sprite sprite;
+    sf::Vector2f offset;
 
     Sprite(entt::resource<sf::Texture> texture) : sprite(*texture) {}
 };
@@ -54,6 +103,10 @@ struct SpriteAnimation {
     }
 };
 
+struct PlayerInput {
+    bool is_current = true;
+};
+
 struct SpriteAnimationControl {
     std::string idle_anim = "idle";
     std::string up_anim = "walk_up";
@@ -63,5 +116,9 @@ struct SpriteAnimationControl {
 };
 
 struct TileMap {
+
+};
+
+struct Enemy {
 
 };

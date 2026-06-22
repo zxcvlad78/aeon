@@ -1,20 +1,16 @@
 #include <termcolor/termcolor.hpp>
 #include "ResourceLoader.hpp"
-#include "Systems.hpp"
+#include "systems/ComponentSystems.hpp"
+#include "systems/UIComponentSystems.hpp"
 
-void input_system(entt::registry& registry);
-void movement_system(entt::registry& registry, float dt);
-void camera_system(entt::registry& registry, sf::RenderWindow& window, float dt);
-void render_system(entt::registry& registry, sf::RenderWindow& window);
-void sprite_animation_system(entt::registry& registry, float dt);
-void sprite_animation_control_system(entt::registry& registry);
+const std::string GAME_VERSION = "v0.0.1";
 
 const sf::Vector2u WINDOW_SIZE = sf::Vector2u(800, 800);
 
 int main() {
     //std::cout << termcolor::green << "start" << termcolor::reset << std::endl;
 
-    sf::RenderWindow window(sf::VideoMode(WINDOW_SIZE), "Vladot Engine");
+    sf::RenderWindow window(sf::VideoMode(WINDOW_SIZE), "Aeon (" + GAME_VERSION + ")");
     window.setFramerateLimit(144);
     
     ResourceLoader resourceloader;
@@ -41,15 +37,33 @@ int main() {
     //Player
     {
         auto player = registry.create();
-            registry.emplace<Position>(player, 0.f, 0.f);
-            registry.emplace<Velocity>(player, 0.f, 0.f, true);
-            registry.emplace<MoveSpeed>(player, 100.0f);
-            registry.emplace<MoveDirection>(player);
-            registry.emplace<SpriteAnimationControl>(player);
+        registry.emplace<Transform>(player);
+        registry.emplace<Velocity>(player, 0.f, 0.f, true);
+        registry.emplace<PlayerInput>(player);
+        registry.emplace<SpriteAnimationControl>(player);
+        
+        registry.emplace<Health>(player, 100.f, 100.f);
+        registry.emplace<MoveSpeed>(player, 100.0f);
+        
+
 
         Sprite sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/vlad/atlas.png"));
+            sprite.offset = {-8.f, -16.f};
             registry.emplace<Sprite>(player, sprite);
-        
+       
+        SpriteAnimation sprite_anim;
+            sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/player_spritesheet.json");
+            registry.emplace<SpriteAnimation>(player, sprite_anim);
+
+        UIHealthBar healthbar;
+            healthbar.offset = sprite.offset + sf::Vector2f(-4.f, -6.f);
+            healthbar.size = {24.f, 3.5f};
+            healthbar.color = sf::Color::Black;
+            healthbar.color_empty = sf::Color::Red;
+            healthbar.color_full = sf::Color::Green;
+            
+            registry.emplace<UIHealthBar>(player, healthbar);
+
         Camera player_camera;
             player_camera.view = sf::View(
                     {0.f, 0.f},
@@ -60,15 +74,12 @@ int main() {
             
 
             
-            SpriteAnimation sprite_anim;
-                sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/player_spritesheet.json");
-                registry.emplace<SpriteAnimation>(player, sprite_anim);
     }
     
     //Floor
     {
         auto floor = registry.create();
-            registry.emplace<Position>(floor, 0.f, 0.f);
+            registry.emplace<Transform>(floor);
             registry.emplace<Sprite>(floor, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/floor.png"));
     }
 
@@ -86,7 +97,9 @@ int main() {
         sf::Time elapsed = clock.restart();
         float delta_time = elapsed.asSeconds();
 
-        input_system(registry);
+
+
+        player_input_system(registry);
         movement_system(registry, delta_time);
         camera_system(registry, window, delta_time);
         
@@ -108,7 +121,10 @@ int main() {
 
         sprite_animation_control_system(registry);
         sprite_animation_system(registry, delta_time);
+        
+        projectile_system(registry,  delta_time);
         render_system(registry, window);
+        ui_render_system(registry, window);
 
         window.setView(window.getDefaultView()); 
         window.draw(fpsText);

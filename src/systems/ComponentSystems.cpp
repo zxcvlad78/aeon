@@ -1,49 +1,48 @@
-#include "Systems.hpp"
+#include "ComponentSystems.hpp"
 #include "Components.hpp"
 
-void input_system(entt::registry& registry) {
-    auto view = registry.view<MoveDirection>();
+void player_input_system(entt::registry& registry) {
+    auto view = registry.view<PlayerInput, MoveSpeed, Velocity>();
 
-    view.each([](MoveDirection& move_dir) {
-        move_dir.up = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W);
-        move_dir.down = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S);
-        move_dir.left = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A);
-        move_dir.right = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D);
-    });
-}
 
-void movement_system(entt::registry& registry, float dt) {
-    auto view = registry.view<Position, Velocity, MoveSpeed, MoveDirection>();
-
-    view.each([dt](Position& pos, Velocity& vel, MoveSpeed& movespeed, MoveDirection& move_dir) {
-        vel.x = 0.0f;
-        vel.y = 0.0f;
+    for (auto [entity, player_input, movespeed, velocity] : view.each()) {
+        velocity.x = 0.0f;
+        velocity.y = 0.0f;
         
-        if (move_dir.up) { vel.y -= movespeed.value; }
-        if (move_dir.down) { vel.y += movespeed.value; }
-        if (move_dir.left) { vel.x -= movespeed.value; }
-        if (move_dir.right) { vel.x += movespeed.value; }
+        velocity.y -= sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W);
+        velocity.y += sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S);
+        velocity.x -= sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A);
+        velocity.x += sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D);
 
-        if (vel.normalize) {
-            if (vel.x != 0.0f && vel.y != 0.0f) {
-                vel.x *= 0.70710678118f;
-                vel.y *= 0.70710678118f;
+        velocity.x *= movespeed.value;
+        velocity.y *= movespeed.value;
+
+        if (velocity.normalize) {
+            if (velocity.x != 0.0f && velocity.y != 0.0f) {
+                velocity.x *= 0.70710678118f;
+                velocity.y *= 0.70710678118f;
             }
         }
 
-        
+    }
+}
+
+void movement_system(entt::registry& registry, float dt) {
+    auto view = registry.view<Transform, Velocity>();
+
+    for (auto [entity, transform, vel] : view.each()) {
         //std::cout << vel.x << ", " << vel.y << std::endl;
-        pos.x += vel.x * dt;
-        pos.y += vel.y * dt;
-    });
+        transform.position.x += vel.x * dt;
+        transform.position.y += vel.y * dt;
+    }
 }
 
 void camera_system(entt::registry& registry, sf::RenderWindow& window, float dt) {
-    auto view = registry.view<Position, Camera>();
+    auto view = registry.view<Transform, Camera>();
 
-    for (auto [entity, pos, camera] : view.each()) {
+    for (auto [entity, transform, camera] : view.each()) {
         sf::Vector2f current_center = camera.view.getCenter();
-        sf::Vector2f target_center = {pos.x, pos.y};
+        sf::Vector2f target_center = {transform.position.x, transform.position.y};
         sf::Vector2f lex = target_center;
 
         if (camera.smooth) {
@@ -122,10 +121,47 @@ void sprite_animation_system(entt::registry& registry, float dt) {
 }
 
 void render_system(entt::registry& registry, sf::RenderWindow& window) {
-    auto view = registry.view<Position, Sprite>();
+    auto view = registry.view<Transform, Sprite>();
 
-    for (auto [entity, pos, sprite] : view.each()) {
+    for (auto [entity, transform, sprite] : view.each()) {
+        sf::Vector2f pos = transform.position + sprite.offset;
+
         sprite.sprite.setPosition({pos.x, pos.y});
+        sprite.sprite.setRotation({transform.rotation_degrees});
+        sprite.sprite.setScale({transform.scale.x, transform.scale.y});
         window.draw(sprite.sprite);
     }
+}
+
+
+void projectile_system(entt::registry& registry, float dt) {
+    auto view1 = registry.view<Transform, Projectile, Hitbox>();
+    auto view2 = registry.view<Transform, Health, Hitbox>();
+
+    for (auto [entity1, transform1, projectile1, hitbox1] : view1.each()) {
+        sf::FloatRect aabb1(
+            {transform1.position.x + hitbox1.offset_x, transform1.position.y + hitbox1.offset_y},
+            {hitbox1.width, hitbox1.height}
+        );
+
+        for (auto [entity2, transform2, health2, hitbox2] : view2.each()) {
+            sf::FloatRect aabb2(
+                {transform2.position.x + hitbox2.offset_x, transform2.position.y + hitbox2.offset_y},
+                {hitbox2.width, hitbox2.height}
+            );
+
+            if (aabb1.findIntersection(aabb2)) {
+                health2.apply_damage(projectile1.damage); //apply damage
+            }
+
+        }
+
+        projectile1.time_elapsed += dt;
+        if (projectile1.time_elapsed >= projectile1.lifetime) {
+            registry.destroy(entity1);
+        }
+    }
+}
+
+void hitbox_collision_system(entt::registry& registry) {
 }
