@@ -59,15 +59,17 @@ public:
 
 
 struct Hitbox {
-    float width, height = 0.f;
-    float offset_x, offset_y = 0.f;
+    sf::Vector2f size;
+    sf::Vector2f offset;
+    //bool center = false;
 };
 
 struct Projectile {
     float damage = 10.f;
-    float lifetime = 2.f;
+    float lifetime = 10.f;
     entt::entity source = entt::null;
     
+    std::vector<entt::entity> damaged_entities;
     float time_elapsed = 0.f;
 };
 
@@ -82,6 +84,7 @@ struct Camera {
 struct Sprite {
     sf::Sprite sprite;
     sf::Vector2f offset;
+    //bool center = false;
 
     Sprite(entt::resource<sf::Texture> texture) : sprite(*texture) {}
 };

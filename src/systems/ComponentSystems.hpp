@@ -10,3 +10,5 @@ void sprite_animation_system(entt::registry& registry, float dt);
 
 void projectile_system(entt::registry& registry, float dt);
 void render_system(entt::registry& registry, sf::RenderWindow& window);
+
+extern bool debug_hitboxes;

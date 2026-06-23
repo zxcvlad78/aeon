@@ -1,6 +1,7 @@
 #include "ComponentSystems.hpp"
 #include "Components.hpp"
 
+
 void player_input_system(entt::registry& registry) {
     auto view = registry.view<PlayerInput, MoveSpeed, Velocity>();
 
@@ -132,8 +133,15 @@ void render_system(entt::registry& registry, sf::RenderWindow& window) {
         window.draw(sprite.sprite);
     }
 
-    for (auto [entity, transform, hitbox] : registry.view<Transform, Hitbox>().each()) {
-
+    if (debug_hitboxes) {
+        for (auto [entity, transform, hitbox] : registry.view<Transform, Hitbox>().each()) {
+            sf::Vector2f pos = transform.position + hitbox.offset;
+    
+            sf::RectangleShape color_bar(hitbox.size);
+            color_bar.setPosition(pos);
+            color_bar.setFillColor(sf::Color(255, 0, 0, 126.f));
+            window.draw(color_bar);
+        }
     }
 }
 
@@ -142,30 +150,41 @@ void projectile_system(entt::registry& registry, float dt) {
     auto view1 = registry.view<Transform, Projectile, Hitbox>();
     auto view2 = registry.view<Transform, Health, Hitbox>();
 
+    std::vector<entt::entity> to_destroy;
+
     for (auto [entity1, transform1, projectile1, hitbox1] : view1.each()) {
         sf::FloatRect aabb1(
-            {transform1.position.x + hitbox1.offset_x, transform1.position.y + hitbox1.offset_y},
-            {hitbox1.width, hitbox1.height}
+            {transform1.position.x + hitbox1.offset.x, transform1.position.y + hitbox1.offset.y},
+            hitbox1.size
         );
 
         for (auto [entity2, transform2, health2, hitbox2] : view2.each()) {
+            auto& list = projectile1.damaged_entities;
+            if (std::find(list.begin(), list.end(), entity2) != list.end()) {
+                continue;
+            }
             sf::FloatRect aabb2(
-                {transform2.position.x + hitbox2.offset_x, transform2.position.y + hitbox2.offset_y},
-                {hitbox2.width, hitbox2.height}
+                {transform2.position.x + hitbox2.offset.x, transform2.position.y + hitbox2.offset.y},
+                hitbox2.size
             );
 
-            if (aabb1.findIntersection(aabb2)) {
+            if (aabb1.findIntersection(aabb2).has_value()) {
                 health2.apply_damage(projectile1.damage); //apply damage
-                std::cout << "sex" << std::endl;
+                projectile1.damaged_entities.push_back(entity2);
             }
 
         }
 
         projectile1.time_elapsed += dt;
         if (projectile1.time_elapsed >= projectile1.lifetime) {
-            registry.destroy(entity1);
+            to_destroy.push_back(entity1);
         }
     }
+
+    for (auto entity : to_destroy) {
+        registry.destroy(entity);
+    }
+
 }
 
 void hitbox_collision_system(entt::registry& registry) {

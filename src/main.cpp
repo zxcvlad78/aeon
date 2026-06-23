@@ -3,9 +3,13 @@
 #include "systems/ComponentSystems.hpp"
 #include "systems/UIComponentSystems.hpp"
 
+#include "utils/DebugText.hpp"
+
 const std::string GAME_VERSION = "v0.0.1";
 
 const sf::Vector2u WINDOW_SIZE = sf::Vector2u(800, 800);
+
+bool debug_hitboxes = false;
 
 int main() {
     //std::cout << termcolor::green << "start" << termcolor::reset << std::endl;
@@ -17,19 +21,12 @@ int main() {
     
     sf::Clock clock;
 
-
     sf::Font main_font;
     if (!main_font.openFromFile("res/fonts/main_font.ttf")) {
         return -1;
     }
 
-    float fps_timer = 0.f;
-    int frame_count = 0;
-
-    sf::Text fpsText(main_font);
-    fpsText.setCharacterSize(24);
-    fpsText.setFillColor(sf::Color::White);
-    fpsText.setPosition({10.f, 10.f});
+    DebugText debug_text(main_font);
 
     
     entt::registry registry;
@@ -46,10 +43,8 @@ int main() {
         registry.emplace<MoveSpeed>(player, 100.0f);
         
         Hitbox player_hitbox;
-            player_hitbox.width = 16.f;
-            player_hitbox.height = 32.f;
-            player_hitbox.offset_x = -8.f;
-            player_hitbox.offset_y = -16.f;
+            player_hitbox.size = {16.f, 32.f};
+            player_hitbox.offset = {-player_hitbox.size.x / 2.f, -player_hitbox.size.y / 2.f};
             registry.emplace<Hitbox>(player, player_hitbox);
 
         Sprite sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/vlad/atlas.png"));
@@ -85,17 +80,24 @@ int main() {
 
     {
         auto test_projectile = registry.create();
-        registry.emplace<Transform>(test_projectile);
+        registry.emplace<Projectile>(test_projectile, 10.f, 10.f);
 
+        Transform projectile_transform;
+            projectile_transform.position = {100.f, 100.f};
+            registry.emplace<Transform>(test_projectile, projectile_transform);
+        
+        Velocity projectile_velocity;
+            projectile_velocity.x = -14.f;
+            projectile_velocity.y = -9.f;
+            registry.emplace<Velocity>(test_projectile, projectile_velocity);
 
         Hitbox projectile_hitbox;
-            projectile_hitbox.width = 8.f;
-            projectile_hitbox.height = 8.f;
-            projectile_hitbox.offset_x = -8.f;
-            projectile_hitbox.offset_y = -8.f;
+            projectile_hitbox.size = {8.f, 8.f};
+            projectile_hitbox.offset = {-projectile_hitbox.size.x / 2.f, -projectile_hitbox.size.y / 2.f};
+            
             registry.emplace<Hitbox>(test_projectile, projectile_hitbox);
         Sprite projectile_sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/t_projectile/atlas.png"));
-            projectile_sprite.offset = {-8.f, -8.f};
+            projectile_sprite.offset = {-4.f, -4.f};
             registry.emplace<Sprite>(test_projectile, projectile_sprite);
         SpriteAnimation projectile_sprite_anim;
             projectile_sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/t_projectile_spritesheet.json");
@@ -111,6 +113,7 @@ int main() {
         registry.emplace<Sprite>(floor, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/floor.png"));
     }
 
+    //MainLoop
     while (window.isOpen())
     {
         while (const std::optional event = window.pollEvent())
@@ -120,32 +123,30 @@ int main() {
                 window.close();
             }
             
+            if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
+            {
+                sf::Keyboard::Key code = keyPressed->code;
+
+                if (code == sf::Keyboard::Key::F3) {
+                    debug_text.set_visibility(!debug_text.is_visible());
+                }
+
+                if (code == sf::Keyboard::Key::F6) {
+                    debug_hitboxes = !debug_hitboxes;
+                }
+            }
+            
         }
 
         sf::Time elapsed = clock.restart();
         float delta_time = elapsed.asSeconds();
 
 
-
         player_input_system(registry);
         movement_system(registry, delta_time);
         camera_system(registry, window, delta_time);
-        
-        // Fps counter
-        {
-            fps_timer += delta_time;
-            frame_count++;
 
-            if (fps_timer >= 0.5f) {
-                int fps = static_cast<int>(frame_count / fps_timer);
-                fpsText.setString("FPS: " + std::to_string(fps));
-                
-                fps_timer = 0.0f;
-                frame_count = 0;
-            }
-        }
-
-        window.clear(sf::Color::Black);
+        window.clear(sf::Color::Blue);
 
         sprite_animation_control_system(registry);
         sprite_animation_system(registry, delta_time);
@@ -155,8 +156,10 @@ int main() {
         ui_render_system(registry, window);
 
         window.setView(window.getDefaultView()); 
-        window.draw(fpsText);
         
+        debug_text.update(delta_time);
+        debug_text.render(window);
+
         window.display();
     }
 
