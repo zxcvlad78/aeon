@@ -68,8 +68,8 @@ struct Projectile {
     float damage = 10.f;
     float lifetime = 10.f;
     entt::entity source = entt::null;
-    
-    std::vector<entt::entity> damaged_entities;
+
+    entt::entity damaged_entity = entt::null;
     float time_elapsed = 0.f;
 };
 
@@ -81,12 +81,19 @@ struct Camera {
     bool follow = true;
 };
 
+
+struct ZIndex {
+    int value = 0;
+};
+
 struct Sprite {
     sf::Sprite sprite;
     sf::Vector2f offset;
-    //bool center = false;
+    bool center = false;
 
-    Sprite(entt::resource<sf::Texture> texture) : sprite(*texture) {}
+    Sprite(entt::resource<sf::Texture> texture) : sprite(*texture) {
+        
+    }
 };
 
 struct SpriteAnimation {

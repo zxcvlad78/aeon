@@ -9,6 +9,35 @@ const std::string GAME_VERSION = "v0.0.1";
 
 const sf::Vector2u WINDOW_SIZE = sf::Vector2u(800, 800);
 
+entt::entity spawn_projectile(entt::registry& registry, ResourceLoader& resourceloader) {
+    auto test_projectile = registry.create();
+    registry.emplace<Projectile>(test_projectile);
+    registry.emplace<ZIndex>(test_projectile, 1);
+
+    Transform projectile_transform;
+        projectile_transform.position = {100.f, 100.f};
+        registry.emplace<Transform>(test_projectile, projectile_transform);
+    
+    Velocity projectile_velocity;
+        projectile_velocity = {-120.f, -120.f};
+        registry.emplace<Velocity>(test_projectile, projectile_velocity);
+
+    Hitbox projectile_hitbox;
+        projectile_hitbox.size = {8.f, 8.f};
+        projectile_hitbox.offset = {-projectile_hitbox.size.x / 2.f, -projectile_hitbox.size.y / 2.f};
+        
+        registry.emplace<Hitbox>(test_projectile, projectile_hitbox);
+    Sprite projectile_sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/t_projectile/atlas.png"));
+        projectile_sprite.center = true;
+        registry.emplace<Sprite>(test_projectile, projectile_sprite);
+    SpriteAnimation projectile_sprite_anim;
+        projectile_sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/t_projectile_spritesheet.json");
+        projectile_sprite_anim.play("idle");
+        registry.emplace<SpriteAnimation>(test_projectile, projectile_sprite_anim);
+    
+    return test_projectile;
+}
+
 bool debug_hitboxes = false;
 
 int main() {
@@ -80,15 +109,15 @@ int main() {
 
     {
         auto test_projectile = registry.create();
-        registry.emplace<Projectile>(test_projectile, 10.f, 10.f);
+        registry.emplace<Projectile>(test_projectile);
+        registry.emplace<ZIndex>(test_projectile, 1);
 
         Transform projectile_transform;
             projectile_transform.position = {100.f, 100.f};
             registry.emplace<Transform>(test_projectile, projectile_transform);
         
         Velocity projectile_velocity;
-            projectile_velocity.x = -14.f;
-            projectile_velocity.y = -9.f;
+            projectile_velocity = {-14.f, -9.f};
             registry.emplace<Velocity>(test_projectile, projectile_velocity);
 
         Hitbox projectile_hitbox;
@@ -134,6 +163,10 @@ int main() {
                 if (code == sf::Keyboard::Key::F6) {
                     debug_hitboxes = !debug_hitboxes;
                 }
+
+                if (code == sf::Keyboard::Key::Space) {
+                    spawn_projectile(registry, resourceloader);
+                }
             }
             
         }
@@ -166,3 +199,4 @@ int main() {
     std::cout << termcolor::yellow << "end" << termcolor::reset << std::endl;
     return 0;
 }
+

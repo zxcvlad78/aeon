@@ -121,17 +121,61 @@ void sprite_animation_system(entt::registry& registry, float dt) {
     }
 }
 
-void render_system(entt::registry& registry, sf::RenderWindow& window) {
-    auto view = registry.view<Transform, Sprite>();
+void sprite_system(entt::registry& registry, sf::RenderWindow& window) {
+    struct Renderable {
+        sf::Sprite* sprite;
+        sf::Vector2f position;
+        sf::Vector2f offset;
+        sf::Angle rotation;
+        sf::Vector2f scale;
+        int z_index;
+    };
 
-    for (auto [entity, transform, sprite] : view.each()) {
-        sf::Vector2f pos = transform.position + sprite.offset;
+    std::vector<Renderable> renderables;
 
-        sprite.sprite.setPosition({pos.x, pos.y});
-        sprite.sprite.setRotation({transform.rotation_degrees});
-        sprite.sprite.setScale({transform.scale.x, transform.scale.y});
-        window.draw(sprite.sprite);
+    for (auto [entity, transform, sprite] : registry.view<Transform, Sprite>().each()) {
+        if (sprite.center) {
+            auto tex_rect = sprite.sprite.getTextureRect();
+            sprite.offset = {
+                -static_cast<float>(tex_rect.size.x) / 2.f,
+                -static_cast<float>(tex_rect.size.y) / 2.f
+            };
+        }
+
+        int z_index = 0;
+        
+        if (registry.all_of<ZIndex>(entity)) {
+            z_index = registry.get<ZIndex>(entity).value;
+        }
+
+        Renderable renderable;
+        renderable.sprite = &sprite.sprite;
+        renderable.position = transform.position;
+        renderable.offset = sprite.offset;
+        renderable.rotation = transform.rotation_degrees;
+        renderable.scale = transform.scale;
+        renderable.z_index = z_index;
+
+        renderables.push_back(renderable);
     }
+
+    std::sort(renderables.begin(), renderables.end(), 
+        [](const Renderable& a, const Renderable& b) {
+            return a.z_index < b.z_index;
+        });
+
+    for (const auto& renderable : renderables) {
+        sf::Vector2f pos = renderable.position + renderable.offset;
+        renderable.sprite->setPosition({pos.x, pos.y});
+        renderable.sprite->setRotation({renderable.rotation});
+        renderable.sprite->setScale({renderable.scale.x, renderable.scale.y});
+        
+        window.draw(*renderable.sprite);
+    }
+}
+
+void render_system(entt::registry& registry, sf::RenderWindow& window) {
+    sprite_system(registry, window);
 
     if (debug_hitboxes) {
         for (auto [entity, transform, hitbox] : registry.view<Transform, Hitbox>().each()) {
@@ -158,21 +202,33 @@ void projectile_system(entt::registry& registry, float dt) {
             hitbox1.size
         );
 
-        for (auto [entity2, transform2, health2, hitbox2] : view2.each()) {
-            auto& list = projectile1.damaged_entities;
-            if (std::find(list.begin(), list.end(), entity2) != list.end()) {
-                continue;
-            }
-            sf::FloatRect aabb2(
-                {transform2.position.x + hitbox2.offset.x, transform2.position.y + hitbox2.offset.y},
-                hitbox2.size
-            );
 
-            if (aabb1.findIntersection(aabb2).has_value()) {
-                health2.apply_damage(projectile1.damage); //apply damage
-                projectile1.damaged_entities.push_back(entity2);
+        if (projectile1.damaged_entity == entt::null) {
+            for (auto [entity2, transform2, health2, hitbox2] : view2.each()) {
+                
+                sf::FloatRect aabb2(
+                    {transform2.position.x + hitbox2.offset.x, transform2.position.y + hitbox2.offset.y},
+                    hitbox2.size
+                );
+    
+                if (aabb1.findIntersection(aabb2).has_value()) {
+                    health2.apply_damage(projectile1.damage); //apply damage
+                    projectile1.damaged_entity = entity2;
+    
+                    if (registry.all_of<Velocity>(entity1)) {
+                        auto& vel = registry.get<Velocity>(entity1);
+                        vel = {0.f, 0.f};
+                    }
+                    
+                    if (registry.all_of<SpriteAnimation>(entity1)) {
+                        auto& sprite_anim = registry.get<SpriteAnimation>(entity1);
+                        sprite_anim.play("death");
+                        projectile1.time_elapsed = 0.f;
+                        projectile1.lifetime = sprite_anim.current_animation->frames.size() / sprite_anim.current_animation->fps;
+                    }
+                }
+            
             }
-
         }
 
         projectile1.time_elapsed += dt;
