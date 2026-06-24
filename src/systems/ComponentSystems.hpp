@@ -1,6 +1,8 @@
 #pragma once
 #include "Components.hpp"
 
+class ResourceLoader;
+
 void player_input_system(entt::registry& registry);
 void movement_system(entt::registry& registry, float dt);
 void camera_system(entt::registry& registry, sf::RenderWindow& window, float dt);

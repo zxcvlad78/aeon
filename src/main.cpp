@@ -1,5 +1,6 @@
 #include <termcolor/termcolor.hpp>
 #include "ResourceLoader.hpp"
+#include "SoundPlayer.hpp"
 #include "systems/ComponentSystems.hpp"
 #include "systems/UIComponentSystems.hpp"
 
@@ -9,33 +10,36 @@ const std::string GAME_VERSION = "v0.0.1";
 
 const sf::Vector2u WINDOW_SIZE = sf::Vector2u(800, 800);
 
-entt::entity spawn_projectile(entt::registry& registry, ResourceLoader& resourceloader) {
-    auto test_projectile = registry.create();
-    registry.emplace<Projectile>(test_projectile);
-    registry.emplace<ZIndex>(test_projectile, 1);
+entt::entity spawn_projectile(entt::registry& registry) {
+    auto projectile_entity = registry.create();
+    registry.emplace<ZIndex>(projectile_entity, 2);
+    
+    Projectile projectile;
+        projectile.hit_soundbuffer = resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/bulk.wav");
+        registry.emplace<Projectile>(projectile_entity, projectile);
 
     Transform projectile_transform;
         projectile_transform.position = {100.f, 100.f};
-        registry.emplace<Transform>(test_projectile, projectile_transform);
+        registry.emplace<Transform>(projectile_entity, projectile_transform);
     
     Velocity projectile_velocity;
         projectile_velocity = {-120.f, -120.f};
-        registry.emplace<Velocity>(test_projectile, projectile_velocity);
+        registry.emplace<Velocity>(projectile_entity, projectile_velocity);
 
     Hitbox projectile_hitbox;
         projectile_hitbox.size = {8.f, 8.f};
         projectile_hitbox.offset = {-projectile_hitbox.size.x / 2.f, -projectile_hitbox.size.y / 2.f};
         
-        registry.emplace<Hitbox>(test_projectile, projectile_hitbox);
+        registry.emplace<Hitbox>(projectile_entity, projectile_hitbox);
     Sprite projectile_sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/t_projectile/atlas.png"));
         projectile_sprite.center = true;
-        registry.emplace<Sprite>(test_projectile, projectile_sprite);
+        registry.emplace<Sprite>(projectile_entity, projectile_sprite);
     SpriteAnimation projectile_sprite_anim;
         projectile_sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/t_projectile_spritesheet.json");
         projectile_sprite_anim.play("idle");
-        registry.emplace<SpriteAnimation>(test_projectile, projectile_sprite_anim);
+        registry.emplace<SpriteAnimation>(projectile_entity, projectile_sprite_anim);
     
-    return test_projectile;
+    return projectile_entity;
 }
 
 bool debug_hitboxes = false;
@@ -45,8 +49,6 @@ int main() {
 
     sf::RenderWindow window(sf::VideoMode(WINDOW_SIZE), "Aeon (" + GAME_VERSION + ")");
     window.setFramerateLimit(144);
-    
-    ResourceLoader resourceloader;
     
     sf::Clock clock;
 
@@ -63,6 +65,7 @@ int main() {
     //Player
     {
         auto player = registry.create();
+        registry.emplace<ZIndex>(player, 1);
         registry.emplace<Transform>(player);
         registry.emplace<Velocity>(player, 0.f, 0.f, true);
         registry.emplace<PlayerInput>(player);
@@ -105,35 +108,7 @@ int main() {
             
     }
     
-    //Projectile
-
-    {
-        auto test_projectile = registry.create();
-        registry.emplace<Projectile>(test_projectile);
-        registry.emplace<ZIndex>(test_projectile, 1);
-
-        Transform projectile_transform;
-            projectile_transform.position = {100.f, 100.f};
-            registry.emplace<Transform>(test_projectile, projectile_transform);
-        
-        Velocity projectile_velocity;
-            projectile_velocity = {-14.f, -9.f};
-            registry.emplace<Velocity>(test_projectile, projectile_velocity);
-
-        Hitbox projectile_hitbox;
-            projectile_hitbox.size = {8.f, 8.f};
-            projectile_hitbox.offset = {-projectile_hitbox.size.x / 2.f, -projectile_hitbox.size.y / 2.f};
-            
-            registry.emplace<Hitbox>(test_projectile, projectile_hitbox);
-        Sprite projectile_sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/t_projectile/atlas.png"));
-            projectile_sprite.offset = {-4.f, -4.f};
-            registry.emplace<Sprite>(test_projectile, projectile_sprite);
-        SpriteAnimation projectile_sprite_anim;
-            projectile_sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/t_projectile_spritesheet.json");
-            projectile_sprite_anim.play("idle");
-            registry.emplace<SpriteAnimation>(test_projectile, projectile_sprite_anim);
-    }
-
+    spawn_projectile(registry);
 
     //Floor
     {
@@ -165,7 +140,7 @@ int main() {
                 }
 
                 if (code == sf::Keyboard::Key::Space) {
-                    spawn_projectile(registry, resourceloader);
+                    spawn_projectile(registry);
                 }
             }
             
@@ -184,7 +159,7 @@ int main() {
         sprite_animation_control_system(registry);
         sprite_animation_system(registry, delta_time);
         
-        projectile_system(registry,  delta_time);
+        projectile_system(registry, delta_time);
         render_system(registry, window);
         ui_render_system(registry, window);
 

@@ -68,6 +68,7 @@ struct Projectile {
     float damage = 10.f;
     float lifetime = 10.f;
     entt::entity source = entt::null;
+    entt::resource<sf::SoundBuffer> hit_soundbuffer;
 
     entt::entity damaged_entity = entt::null;
     float time_elapsed = 0.f;

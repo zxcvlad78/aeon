@@ -19,9 +19,6 @@ private:
 
 public:
     ResourceLoader() = default;
-    ~ResourceLoader() = default;
-    ResourceLoader(const ResourceLoader&) = delete;
-    ResourceLoader& operator=(const ResourceLoader&) = delete;
 
     template <typename T, typename Loader, typename ...Args>
     entt::resource<T> load(const std::string path, Args&&... args) {
@@ -40,3 +37,5 @@ public:
     }
 
 };
+
+extern ResourceLoader resourceloader;
