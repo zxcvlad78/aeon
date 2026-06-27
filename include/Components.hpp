@@ -79,7 +79,7 @@ struct Attack {
 
     float cooldown = 1.f;
     
-    bool in_cooldown() { return cooldown <= 0.f; }
+    bool in_cooldown() { return cooldown > 0.f; }
 };
 
 

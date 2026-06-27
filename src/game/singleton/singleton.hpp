@@ -13,6 +13,10 @@ namespace Singleton {
 
     entt::entity spawn_enemy(
         entt::registry& registry,
+        std::string sprite_atlas_path,
+        std::string spritesheet_path,
         std::string projectile_atlas_path,
-        std::string projectile_spritesheet_path);
+        std::string projectile_spritesheet_path,
+        std::string projectile_hitsound
+    );
 }

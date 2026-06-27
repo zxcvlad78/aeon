@@ -43,6 +43,7 @@ int main() {
         registry.emplace<SpriteAnimationControl>(player);
         registry.emplace<PlayerInput>(player);
         
+        registry.emplace<Faction>(player, "player");
         registry.emplace<Health>(player, 100.f, 100.f);
         registry.emplace<MoveSpeed>(player, 100.0f);
         
@@ -80,7 +81,10 @@ int main() {
     auto mob_enemy = Singleton::spawn_enemy(
         registry,
         "res/textures/zloipacan/atlas.png",
-        "res/textures/zloipacan/spritesheet.json"
+        "res/textures/zloipacan/spritesheet.json",
+        "res/textures/t_projectile/atlas.png",
+        "res/textures/t_projectile/spritesheet.json",
+        "res/audio/bulk.wav"
     );
     registry.get<Transform>(mob_enemy).position = {60.f, 100.f};
 

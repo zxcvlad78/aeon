@@ -1,9 +1,11 @@
 #include "Systems.hpp"
 #include "../../utils/math.hpp"
 #include "../../ResourceLoader.hpp"
+#include "../singleton/singleton.hpp"
 
 void mob_system(entt::registry& registry, float dt) {
     mob_movement_system(registry, dt);
+    mob_attack_ranged_system(registry, dt);
 }
 
 void mob_movement_system(entt::registry& registry, float dt) {
@@ -14,72 +16,67 @@ void mob_attack_ranged_system(entt::registry& registry, float dt) {
     auto view = registry.view<Mob, Transform, Attack, MobAttackRanged>();
 
     for (auto [entity, transform, mob_attack, mob_attack_ranged] : view.each()) {
+        std::cout << "Cooldown: " << mob_attack.cooldown << std::endl;
         if (mob_attack.in_cooldown()) {
             mob_attack.cooldown -= dt;
             continue;
         }
 
-        mob_attack.cooldown = mob_attack.interval;
-
+        
         entt::entity enemy = MobFunc::get_nearest_enemy(registry, entity);
         if (enemy == entt::null) {
             continue;
         }
-
+        
+        mob_attack.cooldown = mob_attack.interval;
+        
         Transform enemy_transform = registry.get<Transform>(enemy);
 
-        {auto projectile_entity = registry.create();
-            registry.emplace<Projectile>(projectile_entity, mob_attack_ranged.projectile);
-
-            Transform projectile_entity_transform;
-                projectile_entity_transform.position = transform.position;
-                registry.emplace<Transform>(projectile_entity, projectile_entity_transform);
-
-            Velocity projectile_entity_velocity;
-                sf::Vector2f dir = Math::get_direction(
-                    {transform.position.x, transform.position.y},
-                    {enemy_transform.position.x, enemy_transform.position.y});
-                projectile_entity_velocity.x = mob_attack_ranged.initial_velocity.x * dir.x;
-                projectile_entity_velocity.y = mob_attack_ranged.initial_velocity.y * dir.y;
-                registry.emplace<Velocity>(projectile_entity, projectile_entity_velocity);
-            
-            Sprite projectile_sprite(resourceloader.load<sf::Texture, sf::TextureLoader>(mob_attack_ranged.projectile_atlas_path));
-                projectile_sprite.center = true;
-                registry.emplace<Sprite>(projectile_entity, projectile_sprite);
-            
-            SpriteAnimation projectile_sprite_anim;
-                projectile_sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>(mob_attack_ranged.projectile_spritesheet_path);
-                projectile_sprite_anim.play("idle");
-                registry.emplace<SpriteAnimation>(projectile_entity, projectile_sprite_anim);
-
-            Hitbox projectile_hitbox;
-                const sf::IntRect p_sprite_tex_rect = projectile_sprite.sprite.getTextureRect();
-                projectile_hitbox.size = {
-                    static_cast<float>(p_sprite_tex_rect.size.x),
-                    static_cast<float>(p_sprite_tex_rect.size.y)
-                };
-                
-                projectile_hitbox.offset = {-projectile_hitbox.size.x / 2.f, -projectile_hitbox.size.y / 2.f};
-                
-                registry.emplace<Hitbox>(projectile_entity, projectile_hitbox);
+        sf::Vector2f enemy_velocity{0.0f, 0.0f};
+        if (registry.all_of<Velocity>(enemy)) {
+            auto& v = registry.get<Velocity>(enemy);
+            enemy_velocity = sf::Vector2f(v.x, v.y);
         }
-    
+
+
+        float projectile_speed = std::hypot(mob_attack_ranged.initial_velocity.x, mob_attack_ranged.initial_velocity.y);
+        float distance = std::hypot(enemy_transform.position.x - transform.position.x, enemy_transform.position.y - transform.position.y);
+        float travel_time = (projectile_speed > 0.0f) ? (distance / projectile_speed) : 0.0f;
+
+        sf::Vector2f predicted_enemy_pos = enemy_transform.position + enemy_velocity * travel_time;
+        sf::Vector2f dir = Math::get_direction(transform.position, predicted_enemy_pos);
+
+
+        Transform projectile_entity_transform;
+            projectile_entity_transform.position = transform.position;
+
+        Velocity projectile_entity_velocity;
+            projectile_entity_velocity.x = mob_attack_ranged.initial_velocity.x * dir.x;
+            projectile_entity_velocity.y = mob_attack_ranged.initial_velocity.y * dir.y;
+
+        Singleton::spawn_projectile(
+            registry,
+            mob_attack_ranged.projectile,
+            projectile_entity_transform,
+            projectile_entity_velocity,
+            mob_attack_ranged.projectile_atlas_path,
+            mob_attack_ranged.projectile_spritesheet_path
+        );
     }
 }
 
 
 namespace MobFunc {
     std::vector<entt::entity> get_enemies(entt::registry& registry, entt::entity from) {
-        auto* ally_faction = registry.try_get<Faction>(from);
         auto* enemy_factions = registry.try_get<EnemyFactions>(from);
         
         std::vector<entt::entity> result;
 
-        if (!ally_faction || !enemy_factions) {
+        if (!enemy_factions) {
             return result; 
         }
 
-        auto view = registry.view<Mob, Faction>();
+        auto view = registry.view<Faction>();
         for (auto [entity, faction] : view.each()) {
             if (entity == from) continue;
 
@@ -114,11 +111,6 @@ namespace MobFunc {
         for (auto enemy : enemies) {
             Transform* enemy_transform = registry.try_get<Transform>(enemy);
             if (!enemy_transform) {
-                continue;
-            }
-
-            if (nearest_enemy == entt::null) {
-                nearest_enemy = enemy;
                 continue;
             }
 
