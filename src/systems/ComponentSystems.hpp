@@ -14,4 +14,7 @@ void projectile_system(entt::registry& registry, float dt);
 void sprite_system(entt::registry& registry);
 void render_system(entt::registry& registry, sf::RenderWindow& window);
 
+void render_healthbar(entt::registry& registry, sf::RenderWindow& window);
+
+
 extern bool debug_hitboxes;

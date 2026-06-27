@@ -25,7 +25,7 @@ void player_input_system(entt::registry& registry) {
                 velocity.y *= 0.70710678118f;
             }
         }
-
+        
     }
 }
 
@@ -176,8 +176,37 @@ void sprite_system(entt::registry& registry, sf::RenderWindow& window) {
     }
 }
 
+void render_healthbar(entt::registry& registry, sf::RenderWindow& window) {
+    auto view = registry.view<HealthBar, Transform, Health>();
+    
+    for (auto [entity, healthbar, transform, health] : view.each()) {
+        sf::Vector2f pos = transform.position + healthbar.offset;
+
+        sf::RectangleShape color_bar(sf::Vector2f(healthbar.size.x, healthbar.size.y));
+        color_bar.setPosition(pos);
+        color_bar.setFillColor(healthbar.color);
+        color_bar.setOutlineColor(healthbar.outline_color);
+        color_bar.setOutlineThickness(healthbar.outline_thickness);
+        window.draw(color_bar);
+    
+        float max_health = health.get_max_value();
+        float current_health = health.get_value();
+
+        float ratio = max_health > 0.0f ? (current_health / max_health) : 0.0f;
+        float width = healthbar.size.x * ratio;
+        
+        sf::RectangleShape full_bar(sf::Vector2f(width, healthbar.size.y));
+        full_bar.setPosition(pos);
+        full_bar.setFillColor(ratio < 0.5f ? healthbar.color_empty : healthbar.color_full);
+
+        window.draw(full_bar);
+
+    }
+}
+
 void render_system(entt::registry& registry, sf::RenderWindow& window) {
     sprite_system(registry, window);
+    render_healthbar(registry, window);
 
     if (debug_hitboxes) {
         for (auto [entity, transform, hitbox] : registry.view<Transform, Hitbox>().each()) {
