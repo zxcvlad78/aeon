@@ -3,7 +3,7 @@
 
 class ResourceLoader;
 
-void player_input_system(entt::registry& registry);
+void player_input_system(entt::registry& registry, sf::RenderWindow& window);
 void movement_system(entt::registry& registry, float dt);
 void camera_system(entt::registry& registry, sf::RenderWindow& window, float dt);
 

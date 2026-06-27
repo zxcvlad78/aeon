@@ -1,6 +1,8 @@
 #include <termcolor/termcolor.hpp>
 #include "ResourceLoader.hpp"
 #include "SoundPlayer.hpp"
+#include "game/singleton/singleton.hpp"
+
 #include "systems/ComponentSystems.hpp"
 #include "systems/UIComponentSystems.hpp"
 
@@ -13,77 +15,6 @@ const std::string GAME_VERSION = "v0.0.1";
 
 const sf::Vector2u WINDOW_SIZE = sf::Vector2u(800, 800);
 
-entt::entity spawn_projectile(
-    entt::registry& registry,
-    Projectile      projectile,
-    Velocity        velocity,
-    std::string     atlas_path = "res/textures/t_projectile/atlas.png",
-    std::string     spritesheet_path = "res/t_projectile_spritesheet.json") {
-    
-    auto projectile_entity = registry.create();
-        registry.emplace<ZIndex>(projectile_entity, 2);
-        registry.emplace<Projectile>(projectile_entity, projectile);
-        registry.emplace<Velocity>(projectile_entity, velocity);
-
-    Transform projectile_transform;
-        projectile_transform.position = {100.f, 100.f};
-        registry.emplace<Transform>(projectile_entity, projectile_transform);
-    
-
-    return projectile_entity;
-}
-
-entt::entity spawn_enemy(
-    entt::registry& registry,
-    std::string projectile_atlas_path,
-    std::string projectile_spritesheet_path
-) {
-    auto entity = registry.create();
-    registry.emplace<ZIndex>(entity, 1);
-    registry.emplace<Transform>(entity);
-    registry.emplace<Velocity>(entity, 0.f, 0.f, true);
-    registry.emplace<SpriteAnimationControl>(entity);
-    
-    registry.emplace<Health>(entity, 100.f, 100.f);
-    registry.emplace<MoveSpeed>(entity, 100.0f);
-    
-    registry.emplace<Mob>(entity);
-
-    Attack attack;
-        registry.emplace<Attack>(entity, attack);
-
-    MobAttackRanged mob_attack_ranged;
-        mob_attack_ranged.projectile = Projectile();
-        mob_attack_ranged.initial_velocity = Velocity(100.f, 100.f);
-        mob_attack_ranged.projectile_atlas_path = projectile_atlas_path;
-        mob_attack_ranged.projectile_spritesheet_path = projectile_spritesheet_path;
-
-        registry.emplace<MobAttackRanged>(entity, mob_attack_ranged);
-
-    Hitbox hitbox;
-        hitbox.size = {16.f, 32.f};
-        hitbox.offset = {-hitbox.size.x / 2.f, -hitbox.size.y / 2.f};
-        registry.emplace<Hitbox>(entity, hitbox);
-
-    Sprite sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/zloipacan/atlas.png"));
-        sprite.offset = {-8.f, -16.f};
-        registry.emplace<Sprite>(entity, sprite);
-    
-    SpriteAnimation sprite_anim;
-        sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/zloipacan/spritesheet.json");
-        registry.emplace<SpriteAnimation>(entity, sprite_anim);
-
-    HealthBar healthbar;
-        healthbar.offset = sprite.offset + sf::Vector2f(-4.f, -6.f);
-        healthbar.size = {24.f, 3.5f};
-        healthbar.color = sf::Color::Black;
-        healthbar.color_empty = sf::Color::Red;
-        healthbar.color_full = sf::Color::Green;
-        
-        registry.emplace<HealthBar>(entity, healthbar);
-
-    return entity;
-}
 
 bool debug_hitboxes = false;
 
@@ -146,16 +77,17 @@ int main() {
             registry.emplace<Camera>(player, player_camera);
     }
     
-    auto mob_enemy = spawn_enemy(
+    auto mob_enemy = Singleton::spawn_enemy(
         registry,
         "res/textures/zloipacan/atlas.png",
         "res/textures/zloipacan/spritesheet.json"
     );
     registry.get<Transform>(mob_enemy).position = {60.f, 100.f};
 
-    spawn_projectile(
+    Singleton::spawn_projectile(
         registry,
         Projectile(),
+        Transform({0.f, 0.f}),
         Velocity(-100.f, -100.f)
     );
 
@@ -187,13 +119,6 @@ int main() {
                     debug_hitboxes = !debug_hitboxes;
                 }
 
-                if (code == sf::Keyboard::Key::Space) {
-                    spawn_projectile(
-                        registry,
-                        Projectile(),
-                        Velocity(-100.f, -100.f)
-                    );
-                }
             }
             
         }
@@ -202,7 +127,7 @@ int main() {
         float delta_time = elapsed.asSeconds();
 
 
-        player_input_system(registry);
+        player_input_system(registry, window);
         mob_system(registry, delta_time);
         movement_system(registry, delta_time);
         projectile_system(registry, delta_time);

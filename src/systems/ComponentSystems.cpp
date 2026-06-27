@@ -4,7 +4,10 @@
 #include "../ResourceLoader.hpp"
 #include "../SoundPlayer.hpp"
 
-void player_input_system(entt::registry& registry) {
+#include "../game/singleton/singleton.hpp"
+#include "../utils/math.hpp"
+
+void player_input_system(entt::registry& registry, sf::RenderWindow& window) {
     auto view = registry.view<PlayerInput, MoveSpeed, Velocity>();
 
     for (auto [entity, player_input, movespeed, velocity] : view.each()) {
@@ -24,10 +27,10 @@ void player_input_system(entt::registry& registry) {
                 velocity.x *= 0.70710678118f;
                 velocity.y *= 0.70710678118f;
             }
-        }
-        
+        }   
     }
 }
+
 
 void movement_system(entt::registry& registry, float dt) {
     auto view = registry.view<Transform, Velocity>();
