@@ -4,11 +4,6 @@ struct Mob {
     
 };
 
-struct MobAI {
-    //unsigned int // мб сделать какой то тип уровень агрессии или че то типо того ярость (rage))) ) и тд хз крч
-    
-};
-
 
 struct MobAttackMelee {
 
@@ -21,3 +16,17 @@ struct MobAttackRanged {
     std::string projectile_spritesheet_path;
 };
 
+struct MobSpawner {
+    std::string sprite_atlas_path;
+    std::string sprite_spritesheet_path;
+    std::string projectile_atlas_path;
+    std::string projectile_spritesheet_path;
+    std::string projectile_hitsound;
+    
+    float spawn_interval = 10.f;
+    sf::Vector2f spawn_range = {250.f, 250.f};
+    entt::resource<sf::SoundBuffer> spawn_soundbuffer;
+
+    float cooldown = 0.f;
+    bool in_cooldown() { return cooldown > 0.f; }
+};

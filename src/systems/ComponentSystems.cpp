@@ -286,6 +286,22 @@ void projectile_system(entt::registry& registry, float dt) {
 
 }
 
+void health_system(entt::registry& registry) {
+    auto view = registry.view<Health>();
+    
+    std::vector<entt::entity> to_destroy;
+
+    for (auto [entity, health] : view.each()) {
+        if (health.get_value() <= 0.f) {
+            to_destroy.push_back(entity);
+        }
+    }
+
+    for (auto entity : to_destroy) {
+        registry.destroy(entity);
+    }
+}
+
 void hitbox_collision_system(entt::registry& registry) {
     
 }

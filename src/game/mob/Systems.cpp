@@ -1,22 +1,57 @@
 #include "Systems.hpp"
+#include <random>
+
 #include "../../utils/math.hpp"
 #include "../../ResourceLoader.hpp"
 #include "../singleton/singleton.hpp"
+#include "../../SoundPlayer.hpp"
 
 void mob_system(entt::registry& registry, float dt) {
     mob_movement_system(registry, dt);
     mob_attack_ranged_system(registry, dt);
+    mob_spawner_system(registry, dt);
 }
 
 void mob_movement_system(entt::registry& registry, float dt) {
 
 }
 
+void mob_spawner_system(entt::registry& registry, float dt) {
+    auto view = registry.view<MobSpawner, Transform>();
+
+    static std::random_device rd;
+    static std::mt19937 gen(rd());
+
+    for (auto [entity, mob_spawner, transform] : view.each()) {
+        if (mob_spawner.in_cooldown()) {
+            mob_spawner.cooldown -= dt;
+            continue;
+        }
+
+        mob_spawner.cooldown = mob_spawner.spawn_interval;
+        entt::entity mob_enemy = Singleton::spawn_enemy(
+            registry,
+            mob_spawner.sprite_atlas_path,
+            mob_spawner.sprite_spritesheet_path,
+            mob_spawner.projectile_atlas_path,
+            mob_spawner.projectile_spritesheet_path,
+            mob_spawner.projectile_hitsound
+        );
+
+        std::uniform_real_distribution<float> dis_x(-mob_spawner.spawn_range.x, mob_spawner.spawn_range.x);
+        std::uniform_real_distribution<float> dis_y(-mob_spawner.spawn_range.y, mob_spawner.spawn_range.y);
+        sf::Vector2f random_offset = { dis_x(gen), dis_y(gen) };
+        sf::Vector2f spawn_position = transform.position + random_offset;
+        registry.get<Transform>(mob_enemy).position = spawn_position; // 
+
+        soundplayer.play(mob_spawner.spawn_soundbuffer, spawn_position);
+    }
+}
+
 void mob_attack_ranged_system(entt::registry& registry, float dt) {
     auto view = registry.view<Mob, Transform, Attack, MobAttackRanged>();
 
     for (auto [entity, transform, mob_attack, mob_attack_ranged] : view.each()) {
-        std::cout << "Cooldown: " << mob_attack.cooldown << std::endl;
         if (mob_attack.in_cooldown()) {
             mob_attack.cooldown -= dt;
             continue;

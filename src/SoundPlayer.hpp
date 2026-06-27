@@ -16,13 +16,16 @@ public:
         }
     }
 
-    void play(sf::SoundBuffer& buffer, sf::Vector2f position = {0.f, 0.f}) {
+    void play(sf::SoundBuffer& buffer, sf::Vector2f position = {0.f, 0.f}, float min_distance = 100.f, float attenuation = 1.f) {
         pool[next].stop();
         pool[next].setBuffer(buffer);
         pool[next].setPosition({position.x, position.y, 0.f});
         pool[next].setRelativeToListener(false);
+        pool[next].setMinDistance(min_distance);
+        pool[next].setAttenuation(attenuation);
         pool[next].play();
         next = (next + 1) % POOL_SIZE;
+    
     }
 
     void play(entt::resource<sf::SoundBuffer> buffer, sf::Vector2f position = {0.f, 0.f}) {

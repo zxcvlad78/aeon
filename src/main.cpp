@@ -38,7 +38,7 @@ int main() {
     //Player
     {auto player = registry.create();
         registry.emplace<ZIndex>(player, 1);
-        registry.emplace<Transform>(player);
+        registry.emplace<Transform>(player).position = {50.f , 50.f};
         registry.emplace<Velocity>(player, 0.f, 0.f, true);
         registry.emplace<SpriteAnimationControl>(player);
         registry.emplace<PlayerInput>(player);
@@ -72,28 +72,28 @@ int main() {
         Camera player_camera;
             player_camera.view = sf::View(
                     {0.f, 0.f},
-                    {static_cast<float>(WINDOW_SIZE.x) / 4.f, static_cast<float>(WINDOW_SIZE.y) / 4.f}
+                    {static_cast<float>(WINDOW_SIZE.x) / 3.f, static_cast<float>(WINDOW_SIZE.y) / 3.f}
                 );
                     
             registry.emplace<Camera>(player, player_camera);
     }
     
-    auto mob_enemy = Singleton::spawn_enemy(
-        registry,
-        "res/textures/zloipacan/atlas.png",
-        "res/textures/zloipacan/spritesheet.json",
-        "res/textures/t_projectile/atlas.png",
-        "res/textures/t_projectile/spritesheet.json",
-        "res/audio/bulk.wav"
-    );
-    registry.get<Transform>(mob_enemy).position = {60.f, 100.f};
+    {auto spawner = registry.create();
+        registry.emplace<Transform>(spawner);
+        registry.emplace<MobSpawner>(spawner,
+            "res/textures/zloipacan/atlas.png",
+            "res/textures/zloipacan/spritesheet.json",
+            "res/textures/t_projectile/atlas.png",
+            "res/textures/t_projectile/spritesheet.json",
+            "res/audio/bulk.wav"
+        ).spawn_soundbuffer = resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/wither-spawn.mp3");
 
-    Singleton::spawn_projectile(
-        registry,
-        Projectile(),
-        Transform({0.f, 0.f}),
-        Velocity(-100.f, -100.f)
-    );
+        registry.emplace<Sprite>(spawner, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/spawner/atlas.png"));
+        registry.emplace<SpriteAnimation>(
+            spawner,
+            resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/spawner/spritesheet.json")).play("idle");
+    
+    }
 
     //Floor
     {auto floor = registry.create();
@@ -131,6 +131,7 @@ int main() {
         float delta_time = elapsed.asSeconds();
 
 
+        health_system(registry);
         player_input_system(registry, window);
         mob_system(registry, delta_time);
         movement_system(registry, delta_time);
