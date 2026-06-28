@@ -42,7 +42,7 @@ void mob_spawner_system(entt::registry& registry, float dt) {
         std::uniform_real_distribution<float> dis_y(-mob_spawner.spawn_range.y, mob_spawner.spawn_range.y);
         sf::Vector2f random_offset = { dis_x(gen), dis_y(gen) };
         sf::Vector2f spawn_position = transform.position + random_offset;
-        registry.get<Transform>(mob_enemy).position = spawn_position; // 
+        registry.get<Transform>(mob_enemy).position = spawn_position;
 
         soundplayer.play(mob_spawner.spawn_soundbuffer, spawn_position);
     }

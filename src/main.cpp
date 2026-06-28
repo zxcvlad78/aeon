@@ -44,7 +44,7 @@ int main() {
         registry.emplace<PlayerInput>(player);
         
         registry.emplace<Faction>(player, "player");
-        registry.emplace<Health>(player, 100.f, 100.f);
+        //registry.emplace<Health>(player, 100.f, 100.f);
         registry.emplace<MoveSpeed>(player, 100.0f);
         
         Hitbox player_hitbox;
@@ -72,21 +72,27 @@ int main() {
         Camera player_camera;
             player_camera.view = sf::View(
                     {0.f, 0.f},
-                    {static_cast<float>(WINDOW_SIZE.x) / 3.f, static_cast<float>(WINDOW_SIZE.y) / 3.f}
+                    {static_cast<float>(WINDOW_SIZE.x) / 3.5f, static_cast<float>(WINDOW_SIZE.y) / 3.5f}
                 );
                     
             registry.emplace<Camera>(player, player_camera);
     }
     
     {auto spawner = registry.create();
+        registry.emplace<ZIndex>(spawner, 1);
         registry.emplace<Transform>(spawner);
         registry.emplace<MobSpawner>(spawner,
             "res/textures/zloipacan/atlas.png",
             "res/textures/zloipacan/spritesheet.json",
             "res/textures/t_projectile/atlas.png",
             "res/textures/t_projectile/spritesheet.json",
-            "res/audio/bulk.wav"
-        ).spawn_soundbuffer = resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/wither-spawn.mp3");
+            "res/audio/bulk.wav",
+
+            5.f,
+            sf::Vector2(450.f, 450.f),
+            resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/wither-spawn.mp3")
+        );
+
 
         registry.emplace<Sprite>(spawner, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/spawner/atlas.png"));
         registry.emplace<SpriteAnimation>(
@@ -150,7 +156,7 @@ int main() {
         
         ui_render_system(registry, window);
         
-        debug_text.update(delta_time);
+        debug_text.update(registry, delta_time);
         debug_text.render(window);
 
         window.display();

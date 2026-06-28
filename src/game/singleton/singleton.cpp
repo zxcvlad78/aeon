@@ -66,7 +66,7 @@ entt::entity Singleton::spawn_enemy(
 
     MobAttackRanged mob_attack_ranged;
         mob_attack_ranged.projectile = Projectile(
-            10.f,
+            0.f,
             10.f,
             entity,
             resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>(projectile_hitsound)

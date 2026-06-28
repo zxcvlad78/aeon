@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SFML/Graphics.hpp"
+#include <entt/entt.hpp>
 
 struct DebugText {
 private:
@@ -34,15 +35,22 @@ public:
         text.setString(text.getString() + string);
     }
 
-    void update(float dt) {
+    void update(entt::registry& registry, float dt) {
         timer += dt;
         frame_count++;
 
         if (timer >= 0.5f) {
             int fps = static_cast<int>(frame_count / timer);
+
+            auto entity_count = registry.storage<entt::entity>().size();
+            // for (auto entity : registry.alive()) {
+            //     entity_count++;
+            // }
+
+
             set_string(
                 "FPS: " + std::to_string(fps) + "\n" +
-                ""
+                "Entities: " + std::to_string(entity_count) + "\n"
             
             );
             

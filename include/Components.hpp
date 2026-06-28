@@ -1,7 +1,7 @@
 #pragma once
 #include <entt/entt.hpp>
 #include "Resources.hpp"
-
+#include "../src/signal/Signal.hpp"
 
 struct Transform {
     sf::Vector2f position;
@@ -112,6 +112,10 @@ struct SpriteAnimation {
     unsigned int current_frame_idx = 0;
     float time_accumulator = 0.0f;
     bool is_playing = true;
+
+    // Signal<const std::string&> animation_started;
+    // Signal<const std::string&> animation_finished;
+    // Signal<unsigned int> frame_changed;
 
     void play(const std::string& animation_name) {
         if (spritesheet && spritesheet->animations.contains(animation_name)) {

@@ -22,6 +22,10 @@ void player_input_system(entt::registry& registry, sf::RenderWindow& window) {
         velocity.x *= movespeed.value;
         velocity.y *= movespeed.value;
 
+        if (velocity.x == 0.0f && velocity.y == 0.0f) {
+            continue;
+        }
+
         if (velocity.normalize) {
             if (velocity.x != 0.0f && velocity.y != 0.0f) {
                 velocity.x *= 0.70710678118f;
