@@ -10,6 +10,7 @@
 
 #include "utils/DebugText.hpp"
 #include "utils/math.hpp"
+#include <ctime>
 
 const std::string GAME_VERSION = "v0.0.1";
 
@@ -19,7 +20,9 @@ const sf::Vector2u WINDOW_SIZE = sf::Vector2u(800, 800);
 bool debug_hitboxes = false;
 
 int main() {
-    //std::cout << termcolor::green << "start" << termcolor::reset << std::endl;
+    std::time_t t = std::time(nullptr);
+    std::tm* ltm = std::localtime(&t);
+    std::cout << termcolor::green << "Game Started " << termcolor::bright_white << ltm->tm_hour << ":" << ltm->tm_min << ":" << ltm->tm_sec << termcolor::reset << std::endl;
 
     sf::RenderWindow window(sf::VideoMode(WINDOW_SIZE), "Aeon (" + GAME_VERSION + ")");
     window.setFramerateLimit(144);
@@ -163,7 +166,7 @@ int main() {
         window.display();
     }
 
-    std::cout << termcolor::yellow << "end" << termcolor::reset << std::endl;
+    std::cout << termcolor::yellow << "Game Closed" << termcolor::reset << std::endl;
     return 0;
 }
 
