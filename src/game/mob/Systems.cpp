@@ -23,8 +23,15 @@ void mob_spawner_system(entt::registry& registry, float dt) {
     static std::mt19937 gen(rd());
 
     for (auto [entity, mob_spawner, transform] : view.each()) {
+        auto sprite_animation = registry.try_get<SpriteAnimation>(entity);
+
         if (mob_spawner.in_cooldown()) {
             mob_spawner.cooldown -= dt;
+            if (sprite_animation) {
+                if (!sprite_animation->is_playing && sprite_animation->current_animation->name != "idle") {
+                    sprite_animation->play("idle");
+                }
+            }
             continue;
         }
 
@@ -45,6 +52,7 @@ void mob_spawner_system(entt::registry& registry, float dt) {
         registry.get<Transform>(mob_enemy).position = spawn_position;
 
         soundplayer.play(mob_spawner.spawn_soundbuffer, spawn_position);
+        if (sprite_animation) { sprite_animation->play("spawn"); }
     }
 }
 

@@ -113,12 +113,9 @@ struct SpriteAnimation {
     float time_accumulator = 0.0f;
     bool is_playing = true;
 
-    // Signal<const std::string&> animation_started;
-    // Signal<const std::string&> animation_finished;
-    // Signal<unsigned int> frame_changed;
-
     void play(const std::string& animation_name) {
         if (spritesheet && spritesheet->animations.contains(animation_name)) {
+            is_playing = true;
             current_animation = &spritesheet->animations.at(animation_name);
             current_frame_idx = 0;
             time_accumulator = 0.0f;

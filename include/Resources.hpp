@@ -56,6 +56,7 @@ namespace sf
 namespace Animation
 {
     struct Resource {
+        std::string name;
         float fps = 12.f;
         bool is_looping = true;
         std::vector<FrameData> frames;
@@ -92,6 +93,7 @@ namespace Spritesheet
                 if (data.contains("animations") && data["animations"].is_object()) {
                     for (auto& [anim_name, anim_data] : data["animations"].items()) {
                         Animation::Resource anim;
+                        anim.name = anim_name;
                         anim.fps = anim_data.value("fps", 12.f);
                         anim.is_looping = anim_data.value("looping", true);
         

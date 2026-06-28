@@ -77,7 +77,8 @@ int main() {
                     
             registry.emplace<Camera>(player, player_camera);
     }
-    
+
+    //Spawner
     {auto spawner = registry.create();
         registry.emplace<ZIndex>(spawner, 1);
         registry.emplace<Transform>(spawner);
@@ -88,7 +89,7 @@ int main() {
             "res/textures/t_projectile/spritesheet.json",
             "res/audio/bulk.wav",
 
-            5.f,
+            5.5f,
             sf::Vector2(450.f, 450.f),
             resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/wither-spawn.mp3")
         );
