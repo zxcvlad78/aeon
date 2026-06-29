@@ -12,10 +12,7 @@
 #include "utils/math.hpp"
 #include <ctime>
 
-const std::string GAME_VERSION = "v0.0.1";
-
-const sf::Vector2u WINDOW_SIZE = sf::Vector2u(800, 800);
-
+#include "console/Console.hpp"
 
 bool debug_hitboxes = false;
 
@@ -24,17 +21,19 @@ int main() {
     std::tm* ltm = std::localtime(&t);
     std::cout << termcolor::green << "Game Started " << termcolor::bright_white << ltm->tm_hour << ":" << ltm->tm_min << ":" << ltm->tm_sec << termcolor::reset << std::endl;
 
-    sf::RenderWindow window(sf::VideoMode(WINDOW_SIZE), "Aeon (" + GAME_VERSION + ")");
+    sf::RenderWindow window(sf::VideoMode(Singleton::Variables::WINDOW_SIZE), "Aeon (" + Singleton::Variables::GAME_VERSION + ")");
     window.setFramerateLimit(144);
     
     sf::Clock clock;
 
-    sf::Font main_font;
-    if (!main_font.openFromFile("res/fonts/main_font.ttf")) {
+
+    if (!Singleton::Variables::main_font.openFromFile("res/fonts/main_font.ttf")) {
         return -1;
     }
 
-    DebugText debug_text(main_font);
+    Console::get_instance().init(Singleton::Variables::main_font, 16);
+
+    DebugText debug_text(Singleton::Variables::main_font);
     
     entt::registry registry;
 
@@ -75,7 +74,10 @@ int main() {
         Camera player_camera;
             player_camera.view = sf::View(
                     {0.f, 0.f},
-                    {static_cast<float>(WINDOW_SIZE.x) / 3.5f, static_cast<float>(WINDOW_SIZE.y) / 3.5f}
+                    {
+                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.x) / 3.5f,
+                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.y) / 3.5f
+                    }
                 );
                     
             registry.emplace<Camera>(player, player_camera);
@@ -133,6 +135,10 @@ int main() {
                     debug_hitboxes = !debug_hitboxes;
                 }
 
+                if (code == sf::Keyboard::Key::Grave) {
+                    Console::get_instance().switch_visibility();
+                }
+
             }
             
         }
@@ -162,6 +168,8 @@ int main() {
         
         debug_text.update(registry, delta_time);
         debug_text.render(window);
+
+        Console::get_instance().update(window, delta_time);
 
         window.display();
     }

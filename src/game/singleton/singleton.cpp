@@ -3,6 +3,12 @@
 #include "../faction/Components.hpp"
 #include "../../ResourceLoader.hpp"
 
+namespace Singleton {
+    namespace Variables {
+        sf::Font main_font;
+    }
+}
+
 entt::entity Singleton::spawn_projectile(
     entt::registry& registry,
     Projectile      projectile,
