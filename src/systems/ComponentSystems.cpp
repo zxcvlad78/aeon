@@ -6,6 +6,7 @@
 
 #include "../game/singleton/singleton.hpp"
 #include "../utils/math.hpp"
+#include "../console/Console.hpp"
 
 void player_input_system(entt::registry& registry, sf::RenderWindow& window) {
     auto view = registry.view<PlayerInput, MoveSpeed, Velocity>();
@@ -13,6 +14,8 @@ void player_input_system(entt::registry& registry, sf::RenderWindow& window) {
     for (auto [entity, player_input, movespeed, velocity] : view.each()) {
         velocity.x = 0.0f;
         velocity.y = 0.0f;
+
+        if (Console::get_instance().is_visible()) { continue; }
         
         velocity.y -= sf::Keyboard::isKeyPressed(sf::Keyboard::Key::W);
         velocity.y += sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S);

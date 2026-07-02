@@ -32,6 +32,21 @@ int main() {
     }
 
     Console::get_instance().init(Singleton::Variables::main_font, 16);
+    Console::get_instance().register_command(
+        "fps_max",
+        [&window](const std::vector<std::string>& args) {
+            if (!args.empty()) {
+                try {
+                    int fps = std::stoi(args[0]);
+                    window.setFramerateLimit(fps);
+                } catch (const std::exception& e) {
+                    //Console::get_instance().print_error("");
+                }
+            }
+        },
+        "Set target framerate",
+        "fps_max <value>"
+    );
 
     DebugText debug_text(Singleton::Variables::main_font);
     
@@ -84,28 +99,28 @@ int main() {
     }
 
     //Spawner
-    {auto spawner = registry.create();
-        registry.emplace<ZIndex>(spawner, 1);
-        registry.emplace<Transform>(spawner);
-        registry.emplace<MobSpawner>(spawner,
-            "res/textures/zloipacan/atlas.png",
-            "res/textures/zloipacan/spritesheet.json",
-            "res/textures/t_projectile/atlas.png",
-            "res/textures/t_projectile/spritesheet.json",
-            "res/audio/bulk.wav",
-
-            5.5f,
-            sf::Vector2(450.f, 450.f),
-            resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/wither-spawn.mp3")
-        );
-
-
-        registry.emplace<Sprite>(spawner, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/spawner/atlas.png"));
-        registry.emplace<SpriteAnimation>(
-            spawner,
-            resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/spawner/spritesheet.json")).play("idle");
-    
-    }
+    // {auto spawner = registry.create();
+    //     registry.emplace<ZIndex>(spawner, 1);
+    //     registry.emplace<Transform>(spawner);
+    //     registry.emplace<MobSpawner>(spawner,
+    //         "res/textures/zloipacan/atlas.png",
+    //         "res/textures/zloipacan/spritesheet.json",
+    //         "res/textures/t_projectile/atlas.png",
+    //         "res/textures/t_projectile/spritesheet.json",
+    //         "res/audio/bulk.wav",
+    //
+    //         5.5f,
+    //         sf::Vector2(450.f, 450.f),
+    //         resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/wither-spawn.mp3")
+    //     );
+    //
+    //
+    //     registry.emplace<Sprite>(spawner, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/spawner/atlas.png"));
+    //     registry.emplace<SpriteAnimation>(
+    //         spawner,
+    //         resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/spawner/spritesheet.json")).play("idle");
+    //
+    // }
 
     //Floor
     {auto floor = registry.create();
@@ -122,25 +137,30 @@ int main() {
             {
                 window.close();
             }
+
+            
+            player_input_system(registry, window);
             
             if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
             {
                 sf::Keyboard::Key code = keyPressed->code;
-
+                
                 if (code == sf::Keyboard::Key::F3) {
                     debug_text.set_visibility(!debug_text.is_visible());
                 }
-
+                
                 if (code == sf::Keyboard::Key::F6) {
                     debug_hitboxes = !debug_hitboxes;
                 }
-
+                
                 if (code == sf::Keyboard::Key::Grave) {
-                    Console::get_instance().switch_visibility();
+                    Console::get_instance().toggle();
                 }
-
+                
             }
             
+            
+            Console::get_instance().handle_event(*event, window);
         }
 
         sf::Time elapsed = clock.restart();
@@ -148,7 +168,7 @@ int main() {
 
 
         health_system(registry);
-        player_input_system(registry, window);
+        
         mob_system(registry, delta_time);
         movement_system(registry, delta_time);
         projectile_system(registry, delta_time);
@@ -157,6 +177,8 @@ int main() {
 
         sprite_animation_control_system(registry);
         sprite_animation_system(registry, delta_time);
+
+        Console::get_instance().update(window, delta_time);
 
         window.clear(sf::Color::Blue);
 
@@ -169,7 +191,7 @@ int main() {
         debug_text.update(registry, delta_time);
         debug_text.render(window);
 
-        Console::get_instance().update(window, delta_time);
+        Console::get_instance().render(window);
 
         window.display();
     }
