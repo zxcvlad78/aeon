@@ -152,11 +152,6 @@ int main() {
                 if (code == sf::Keyboard::Key::F6) {
                     debug_hitboxes = !debug_hitboxes;
                 }
-                
-                if (code == sf::Keyboard::Key::Grave) {
-                    Console::get_instance().toggle();
-                }
-                
             }
             
             

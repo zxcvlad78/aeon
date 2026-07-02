@@ -174,12 +174,17 @@ void Console::autocomplete() {
 }
 
 void Console::handle_event(const sf::Event& event, sf::RenderWindow& window) {
-    if (!visible) return;
-    
     if (event.is<sf::Event::KeyPressed>()) {
         const auto* key = event.getIf<sf::Event::KeyPressed>();
         if (!key) return;
         
+        if (key->code == sf::Keyboard::Key::Grave) {
+            toggle();
+            return;
+        }
+
+        if (!visible) return;
+
         switch (key->code) {
             case sf::Keyboard::Key::Escape:
                 hide();
@@ -246,6 +251,8 @@ void Console::handle_event(const sf::Event& event, sf::RenderWindow& window) {
         }
     }
     
+    if (!visible) return;
+
     if (event.is<sf::Event::TextEntered>()) {
         const auto* text = event.getIf<sf::Event::TextEntered>();
         if (text && text->unicode >= 32 && text->unicode < 127) {
