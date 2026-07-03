@@ -25,7 +25,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     SFML::System
     SFML::Audio
     EnTT::EnTT
-    glm::glm
 )
 
 

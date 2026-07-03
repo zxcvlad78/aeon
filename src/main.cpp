@@ -7,7 +7,6 @@
 #include "systems/UIComponentSystems.hpp"
 
 #include "game/mob/Systems.hpp"
-#include "3d/Systems.hpp"
 
 #include "utils/DebugText.hpp"
 #include "utils/math.hpp"
@@ -55,90 +54,81 @@ int main() {
     entt::registry registry;
 
     //Player
-    // {auto player = registry.create();
-    //     registry.emplace<ZIndex>(player, 1);
-    //     registry.emplace<Transform>(player).position = {50.f , 50.f};
-    //     registry.emplace<Velocity>(player, 0.f, 0.f, true);
-    //     registry.emplace<SpriteAnimationControl>(player);
-    //     registry.emplace<PlayerInput>(player);
-    //
-    //     registry.emplace<Faction>(player, "player");
-    //     //registry.emplace<Health>(player, 100.f, 100.f);
-    //     registry.emplace<MoveSpeed>(player, 100.0f);
-    //  
-    //     Hitbox player_hitbox;
-    //         player_hitbox.size = {16.f, 32.f};
-    //         player_hitbox.offset = {-player_hitbox.size.x / 2.f, -player_hitbox.size.y / 2.f};
-    //         registry.emplace<Hitbox>(player, player_hitbox);
-    //
-    //     Sprite sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/vlad/atlas.png"));
-    //         sprite.offset = {-8.f, -16.f};
-    //         registry.emplace<Sprite>(player, sprite);
-    // 
-    //     SpriteAnimation sprite_anim;
-    //         sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/vlad/spritesheet.json");
-    //         registry.emplace<SpriteAnimation>(player, sprite_anim);
-    //
-    //     HealthBar healthbar;
-    //         healthbar.offset = sprite.offset + sf::Vector2f(-4.f, -6.f);
-    //         healthbar.size = {24.f, 3.5f};
-    //         healthbar.color = sf::Color::Black;
-    //         healthbar.color_empty = sf::Color::Red;
-    //         healthbar.color_full = sf::Color::Green;
-    //      
-    //         registry.emplace<HealthBar>(player, healthbar);
-    //
-    //     Camera player_camera;
-    //         player_camera.view = sf::View(
-    //                 {0.f, 0.f},
-    //                 {
-    //                     static_cast<float>(Singleton::Variables::WINDOW_SIZE.x) / 3.5f,
-    //                     static_cast<float>(Singleton::Variables::WINDOW_SIZE.y) / 3.5f
-    //                 }
-    //             );
-    //              
-    //         registry.emplace<Camera>(player, player_camera);
-    // }
+    {auto player = registry.create();
+        registry.emplace<ZIndex>(player, 1);
+        registry.emplace<Transform>(player).position = {50.f , 50.f};
+        registry.emplace<Velocity>(player, 0.f, 0.f, true);
+        registry.emplace<SpriteAnimationControl>(player);
+        registry.emplace<PlayerInput>(player);
+    
+        registry.emplace<Faction>(player, "player");
+        registry.emplace<Health>(player, 100.f, 100.f);
+        registry.emplace<MoveSpeed>(player, 100.0f);
+     
+        Hitbox player_hitbox;
+            player_hitbox.size = {16.f, 32.f};
+            player_hitbox.offset = {-player_hitbox.size.x / 2.f, -player_hitbox.size.y / 2.f};
+            registry.emplace<Hitbox>(player, player_hitbox);
+    
+        Sprite sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/vlad/atlas.png"));
+            sprite.offset = {-8.f, -16.f};
+            registry.emplace<Sprite>(player, sprite);
+    
+        SpriteAnimation sprite_anim;
+            sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/vlad/spritesheet.json");
+            registry.emplace<SpriteAnimation>(player, sprite_anim);
+    
+        HealthBar healthbar;
+            healthbar.offset = sprite.offset + sf::Vector2f(-4.f, -6.f);
+            healthbar.size = {24.f, 3.5f};
+            healthbar.color = sf::Color::Black;
+            healthbar.color_empty = sf::Color::Red;
+            healthbar.color_full = sf::Color::Green;
+         
+            registry.emplace<HealthBar>(player, healthbar);
+    
+        Camera player_camera;
+            player_camera.view = sf::View(
+                    {0.f, 0.f},
+                    {
+                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.x) / 3.5f,
+                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.y) / 3.5f
+                    }
+                );
+                 
+            registry.emplace<Camera>(player, player_camera);
+    }
 
     //Spawner
-    // {auto spawner = registry.create();
-    //     registry.emplace<ZIndex>(spawner, 1);
-    //     registry.emplace<Transform>(spawner);
-    //     registry.emplace<MobSpawner>(spawner,
-    //         "res/textures/zloipacan/atlas.png",
-    //         "res/textures/zloipacan/spritesheet.json",
-    //         "res/textures/t_projectile/atlas.png",
-    //         "res/textures/t_projectile/spritesheet.json",
-    //         "res/audio/bulk.wav",
-    //
-    //         5.5f,
-    //         sf::Vector2(450.f, 450.f),
-    //         resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/wither-spawn.mp3")
-    //     );
-    //
-    //
-    //     registry.emplace<Sprite>(spawner, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/spawner/atlas.png"));
-    //     registry.emplace<SpriteAnimation>(
-    //         spawner,
-    //         resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/spawner/spritesheet.json")).play("idle");
-    //
-    // }
+    {auto spawner = registry.create();
+        registry.emplace<ZIndex>(spawner, 1);
+        registry.emplace<Transform>(spawner);
+        registry.emplace<MobSpawner>(spawner,
+            "res/textures/zloipacan/atlas.png",
+            "res/textures/zloipacan/spritesheet.json",
+            "res/textures/t_projectile/atlas.png",
+            "res/textures/t_projectile/spritesheet.json",
+            "res/audio/bulk.wav",
+    
+            5.5f,
+            sf::Vector2(450.f, 450.f),
+            resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/wither-spawn.mp3")
+        );
+    
+    
+        registry.emplace<Sprite>(spawner, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/spawner/atlas.png"));
+        registry.emplace<SpriteAnimation>(
+            spawner,
+            resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/spawner/spritesheet.json")).play("idle");
+    
+    }
 
     //Floor
-    // {auto floor = registry.create();
-    //     registry.emplace<Transform>(floor);
-    //     registry.emplace<Sprite>(floor, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/floor.png"));
-    // }
-
-    {auto camera = registry.create();
-        registry.emplace<Camera3D>(camera);
-        registry.emplace<Transform3D>(camera);
+    {auto floor = registry.create();
+        registry.emplace<Transform>(floor);
+        registry.emplace<Sprite>(floor, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/floor.png"));
     }
 
-    {auto cube = registry.create();
-        registry.emplace<Transform3D>(cube);
-        registry.emplace<Mesh3D>(cube);
-    }
 
     //MainLoop
     while (window.isOpen())

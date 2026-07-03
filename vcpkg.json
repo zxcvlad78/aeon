@@ -5,7 +5,6 @@
     "sfml",
     "entt",
     "termcolor",
-    "nlohmann-json",
-    "glm"
+    "nlohmann-json"
   ]
 }
