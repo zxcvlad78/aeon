@@ -123,7 +123,7 @@ namespace MobFunc {
         for (auto [entity, faction] : view.each()) {
             if (entity == from) continue;
 
-            auto it = std::find(enemy_factions->list.begin(), enemy_factions->list.end(), faction.name);
+            auto it = std::find(enemy_factions->list.begin(), enemy_factions->list.end(), faction.id);
             if (it != enemy_factions->list.end()) {
                 result.push_back(entity);
             }

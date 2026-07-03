@@ -260,7 +260,7 @@ void projectile_system(entt::registry& registry, float dt) {
 
                     if (registry.all_of<Health>(entity2)) {
                         auto& health = registry.get<Health>(entity2);
-                        health.apply_damage(projectile1.damage);
+                        //health.apply_damage(projectile1.damage);
                     }
                     
                     if (registry.all_of<Velocity>(entity1)) {

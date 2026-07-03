@@ -49,9 +49,37 @@ int main() {
         "fps_max <value>"
     );
 
+
     DebugText debug_text(Singleton::Variables::main_font);
     
     entt::registry registry;
+
+    Console::get_instance().register_command(
+        "spawn_enemy",
+        [&registry](const std::vector<std::string>& args) {
+            if (!args.empty()) {
+                try {
+                    auto e = Singleton::spawn_enemy(registry,
+                        "res/textures/zloipacan/atlas.png",
+                        "res/textures/zloipacan/spritesheet.json",
+                        "res/textures/t_projectile/atlas.png",
+                        "res/textures/t_projectile/spritesheet.json",
+                        "res/audio/bulk.wav"
+                    );
+                    auto t = registry.try_get<Transform>(e);
+                    if (t) {
+                        t->position.x = static_cast<float>(std::stoi(args[0]));
+                        t->position.y = static_cast<float>(std::stoi(args[1]));
+                    }
+
+                } catch (const std::exception& e) {
+                    Console::get_instance().print_error(e.what());
+                }
+            }
+        },
+        "Spawn",
+        "spawn_enemy <pos_x, pos_y>"
+    );
 
     //Player
     {auto player = registry.create();
