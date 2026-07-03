@@ -51,6 +51,18 @@ namespace sf
         }
     };
 
+    struct ShaderLoader {
+        using result_type = std::shared_ptr<Shader>;
+        
+        std::shared_ptr<Shader> operator()(const std::string& vertex_path, const std::string& fragment_path) const {
+            auto shader = std::make_shared<Shader>();
+            if (!shader->loadFromFile(vertex_path, fragment_path)) {
+                return nullptr;
+            }
+            return shader;
+        }
+    };
+
 }
 
 namespace Animation

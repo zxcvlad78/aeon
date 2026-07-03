@@ -9,6 +9,7 @@ private:
         entt::resource_cache<sf::Texture, sf::TextureLoader>,
         entt::resource_cache<sf::SoundBuffer, sf::SoundBufferLoader>,
         entt::resource_cache<Spritesheet::Resource, Spritesheet::Loader>,
+        entt::resource_cache<sf::Shader, sf::ShaderLoader>,
         entt::resource_cache<TileSet::Resource, TileSet::Loader>
     > m_caches;
 

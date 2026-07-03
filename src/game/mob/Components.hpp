@@ -1,3 +1,4 @@
+#pragma once
 #include "../../../include/Components.hpp"
 
 struct Mob {
