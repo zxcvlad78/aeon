@@ -17,6 +17,7 @@ public:
     }
 
     void play(sf::SoundBuffer& buffer, sf::Vector2f position = {0.f, 0.f}, float min_distance = 100.f, float attenuation = 1.f) {
+
         pool[next].stop();
         pool[next].setBuffer(buffer);
         pool[next].setPosition({position.x, position.y, 0.f});

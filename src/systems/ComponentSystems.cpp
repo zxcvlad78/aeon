@@ -115,13 +115,6 @@ void sprite_animation_system(entt::registry& registry, float dt) {
             sprite_anim.time_accumulator -= frame_duration;
             size_t next_frame = sprite_anim.current_frame_idx + 1;
 
-            if (sprite_anim.current_frame_idx >= sprite_anim.current_animation->frames.size()) {
-                std::cerr << "ERROR: frame_idx=" << sprite_anim.current_frame_idx 
-                        << " frames.size()=" << sprite_anim.current_animation->frames.size()
-                        << " entity=" << static_cast<uint32_t>(entity) << std::endl;
-                sprite_anim.current_frame_idx = 0;
-            }
-
             if (next_frame >= sprite_anim.current_animation->frames.size()) {
                 if (sprite_anim.current_animation->is_looping) {
                     sprite_anim.current_frame_idx = 0;
@@ -240,7 +233,6 @@ void render_system(entt::registry& registry, sf::RenderWindow& window) {
 
 void projectile_system(entt::registry& registry, float dt) {
     auto view1 = registry.view<Transform, Projectile, Hitbox>();
-    auto view2 = registry.view<Transform, Hitbox>();
 
     std::vector<entt::entity> to_destroy;
 
@@ -248,51 +240,58 @@ void projectile_system(entt::registry& registry, float dt) {
         projectile1.time_elapsed += dt;
         if (projectile1.time_elapsed >= projectile1.lifetime) {
             to_destroy.push_back(entity1);
+            continue;
         }
 
         if (!collision_enabled) { continue; }
+        if (projectile1.damaged_entity != entt::null) { continue; }
 
         sf::FloatRect aabb1(
             {transform1.position.x + hitbox1.offset.x, transform1.position.y + hitbox1.offset.y},
             hitbox1.size
         );
 
-        if (projectile1.damaged_entity == entt::null) {
-            for (auto [entity2, transform2, hitbox2] : view2.each()) {
-                if (projectile1.source == entity2 || entity1 == entity2) { continue; }
+        auto view2 = registry.view<Transform, Hitbox>();
+        for (auto [entity2, transform2, hitbox2] : view2.each()) {
+            if (projectile1.source == entity2 || entity1 == entity2) { continue; }
+
+            sf::FloatRect aabb2(
+                {transform2.position.x + hitbox2.offset.x, transform2.position.y + hitbox2.offset.y},
+                hitbox2.size
+            );
+
+
+            if (aabb1.findIntersection(aabb2).has_value()) {
+                projectile1.damaged_entity = entity2;
+                hitbox1.size = {0.f, 0.f};
+
+                if (registry.all_of<Health>(entity2)) {
+                    auto& health = registry.get<Health>(entity2);
+                    health.apply_damage(projectile1.damage);
+                }
                 
-                sf::FloatRect aabb2(
-                    {transform2.position.x + hitbox2.offset.x, transform2.position.y + hitbox2.offset.y},
-                    hitbox2.size
-                );
-    
-
-                if (aabb1.findIntersection(aabb2).has_value()) {
-                    projectile1.damaged_entity = entity2;
-                    hitbox1.size = {0.f, 0.f};
-
-                    if (registry.all_of<Health>(entity2)) {
-                        auto& health = registry.get<Health>(entity2);
-                        health.apply_damage(projectile1.damage);
-                    }
-                    
-                    if (registry.all_of<Velocity>(entity1)) {
-                        auto& vel = registry.get<Velocity>(entity1);
-                        vel = {0.f, 0.f};
-                    }
-                    
-                    if (registry.all_of<SpriteAnimation>(entity1)) {
-                        auto& sprite_anim = registry.get<SpriteAnimation>(entity1);
-                        sprite_anim.play("death");
+                if (registry.all_of<Velocity>(entity1)) {
+                    auto& vel = registry.get<Velocity>(entity1);
+                    vel = {0.f, 0.f};
+                }
+                
+                if (registry.all_of<SpriteAnimation>(entity1)) {
+                    auto& sprite_anim = registry.get<SpriteAnimation>(entity1);
+                    sprite_anim.play("death");
+                    if (sprite_anim.current_animation && !sprite_anim.current_animation->frames.empty()) {
                         projectile1.time_elapsed = 0.f;
                         projectile1.lifetime = sprite_anim.current_animation->frames.size() / sprite_anim.current_animation->fps;
+                    } else {
+                        projectile1.time_elapsed = projectile1.lifetime;
                     }
-                    
-                    soundplayer.play(projectile1.hit_soundbuffer, transform1.position);
                 }
-            
+                
+                soundplayer.play(projectile1.hit_soundbuffer, transform1.position);
+                break;
             }
+        
         }
+        
     }
 
     

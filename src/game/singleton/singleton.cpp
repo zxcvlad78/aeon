@@ -34,16 +34,22 @@ entt::entity Singleton::spawn_projectile(
         registry.emplace<SpriteAnimation>(projectile_entity, projectile_sprite_anim);
 
     Hitbox projectile_hitbox;
-        FrameData sprite_fd = projectile_sprite_anim.current_animation->frames.front();
-        projectile_hitbox.size = {
-            static_cast<float>(sprite_fd.w),
-            static_cast<float>(sprite_fd.h)
-        };
+        if (projectile_sprite_anim.current_animation && !projectile_sprite_anim.current_animation->frames.empty()){
+            FrameData sprite_fd = projectile_sprite_anim.current_animation->frames.front();
+            projectile_hitbox.size = {
+                static_cast<float>(sprite_fd.w),
+                static_cast<float>(sprite_fd.h)
+            };
+        }
+        else {
+            projectile_hitbox.size = {8.f, 8.f};
+        }
         
         projectile_hitbox.offset = {-projectile_hitbox.size.x / 2.f, -projectile_hitbox.size.y / 2.f};
         
         registry.emplace<Hitbox>(projectile_entity, projectile_hitbox);
-    
+
+
     return projectile_entity;
 }
 
