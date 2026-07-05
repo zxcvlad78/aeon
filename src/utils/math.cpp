@@ -1,6 +1,11 @@
 #include "math.hpp"
 
 namespace Math {
+    float get_distance(sf::Vector2f vec_a, sf::Vector2f vec_b) {
+        sf::Vector2f direction = {vec_b.x - vec_a.x, vec_b.y - vec_a.y};
+        return std::sqrt(direction.x * direction.x + direction.y * direction.y);
+    }
+
     sf::Vector2f get_direction(sf::Vector2f vec_a, sf::Vector2f vec_b) {
         sf::Vector2f direction = {vec_b.x - vec_a.x, vec_b.y - vec_a.y};
         float distance = std::sqrt(direction.x * direction.x + direction.y * direction.y);
@@ -12,5 +17,4 @@ namespace Math {
 
         return direction;
     }
-
 }

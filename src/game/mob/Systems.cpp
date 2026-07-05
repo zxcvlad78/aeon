@@ -1,6 +1,8 @@
 #include "Systems.hpp"
 #include <random>
 
+#include "../ai/Components.hpp"
+
 #include "../../utils/math.hpp"
 #include "../../ResourceLoader.hpp"
 #include "../singleton/singleton.hpp"
@@ -13,7 +15,32 @@ void mob_system(entt::registry& registry, float dt) {
 }
 
 void mob_movement_system(entt::registry& registry, float dt) {
+    auto view_ranged = registry.view<MoveSpeed, Transform, Velocity, AIComponents::AITarget, Mob>();
+    for (auto [entity, ms, transform, vel, ai_target] : view_ranged.each()) {
+        if (ai_target.get_entity() == entt::null) {
+            vel = {0.f, 0.f};
+            continue;
+        }
 
+        Transform* enemy_transform = registry.try_get<Transform>(ai_target.get_entity());
+        if (!enemy_transform) {
+            vel = {0.f, 0.f};
+            continue;
+        }
+
+        float distance = Math::get_distance(transform.position, enemy_transform->position);
+        if (distance <= 150.f) {
+            vel = {0.f, 0.f};
+            continue;
+        }
+
+        sf::Vector2f direction = Math::get_direction(transform.position, enemy_transform->position);
+        vel = {
+            direction.x * ms.value,
+            direction.y * ms.value
+        };
+
+    }
 }
 
 void mob_spawner_system(entt::registry& registry, float dt) {
@@ -57,16 +84,19 @@ void mob_spawner_system(entt::registry& registry, float dt) {
 }
 
 void mob_attack_ranged_system(entt::registry& registry, float dt) {
-    auto view = registry.view<Mob, Transform, Attack, MobAttackRanged>();
+    auto view = registry.view<Mob, Transform, Attack, MobAttackRanged, AIComponents::AITarget>();
 
-    for (auto [entity, transform, mob_attack, mob_attack_ranged] : view.each()) {
+    for (auto [entity, transform, mob_attack, mob_attack_ranged, ai_target] : view.each()) {
         if (mob_attack.in_cooldown()) {
             mob_attack.cooldown -= dt;
             continue;
         }
 
-        
-        entt::entity enemy = MobFunc::get_nearest_enemy(registry, entity);
+        if (ai_target.should_pick()) {
+            ai_target.pick(MobFunc::get_nearest_enemy(registry, entity));
+        }
+
+        entt::entity enemy = ai_target.get_entity();
         if (enemy == entt::null) {
             continue;
         }
@@ -74,7 +104,7 @@ void mob_attack_ranged_system(entt::registry& registry, float dt) {
         mob_attack.cooldown = mob_attack.interval;
         
         Transform enemy_transform = registry.get<Transform>(enemy);
-
+        
         sf::Vector2f enemy_velocity{0.0f, 0.0f};
         if (registry.all_of<Velocity>(enemy)) {
             auto& v = registry.get<Velocity>(enemy);

@@ -18,3 +18,4 @@ void render_healthbar(entt::registry& registry, sf::RenderWindow& window);
 void health_system(entt::registry& registry);
 
 extern bool debug_hitboxes;
+extern bool collision_enabled;

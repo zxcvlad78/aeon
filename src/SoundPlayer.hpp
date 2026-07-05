@@ -3,7 +3,7 @@
 
 class SoundPlayer {
 private:
-    static constexpr size_t POOL_SIZE = 8;
+    static constexpr size_t POOL_SIZE = 32;
     sf::SoundBuffer dummyBuffer;
     std::vector<sf::Sound> pool;
     size_t next = 0;

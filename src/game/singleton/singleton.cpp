@@ -1,6 +1,7 @@
 #include "singleton.hpp"
 #include "../mob/Components.hpp"
 #include "../faction/Components.hpp"
+#include "../ai/Components.hpp"
 #include "../../ResourceLoader.hpp"
 
 namespace Singleton {
@@ -64,6 +65,7 @@ entt::entity Singleton::spawn_enemy(
     registry.emplace<MoveSpeed>(entity, 100.0f);
     
     registry.emplace<Mob>(entity);
+    registry.emplace<AIComponents::AITarget>(entity);
     registry.emplace<Faction>(entity, "enemy");
     registry.emplace<EnemyFactions>(entity).list.push_back("player");
 

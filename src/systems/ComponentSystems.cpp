@@ -115,6 +115,13 @@ void sprite_animation_system(entt::registry& registry, float dt) {
             sprite_anim.time_accumulator -= frame_duration;
             size_t next_frame = sprite_anim.current_frame_idx + 1;
 
+            if (sprite_anim.current_frame_idx >= sprite_anim.current_animation->frames.size()) {
+                std::cerr << "ERROR: frame_idx=" << sprite_anim.current_frame_idx 
+                        << " frames.size()=" << sprite_anim.current_animation->frames.size()
+                        << " entity=" << static_cast<uint32_t>(entity) << std::endl;
+                sprite_anim.current_frame_idx = 0;
+            }
+
             if (next_frame >= sprite_anim.current_animation->frames.size()) {
                 if (sprite_anim.current_animation->is_looping) {
                     sprite_anim.current_frame_idx = 0;
@@ -238,11 +245,17 @@ void projectile_system(entt::registry& registry, float dt) {
     std::vector<entt::entity> to_destroy;
 
     for (auto [entity1, transform1, projectile1, hitbox1] : view1.each()) {
+        projectile1.time_elapsed += dt;
+        if (projectile1.time_elapsed >= projectile1.lifetime) {
+            to_destroy.push_back(entity1);
+        }
+
+        if (!collision_enabled) { continue; }
+
         sf::FloatRect aabb1(
             {transform1.position.x + hitbox1.offset.x, transform1.position.y + hitbox1.offset.y},
             hitbox1.size
         );
-
 
         if (projectile1.damaged_entity == entt::null) {
             for (auto [entity2, transform2, hitbox2] : view2.each()) {
@@ -260,7 +273,7 @@ void projectile_system(entt::registry& registry, float dt) {
 
                     if (registry.all_of<Health>(entity2)) {
                         auto& health = registry.get<Health>(entity2);
-                        //health.apply_damage(projectile1.damage);
+                        health.apply_damage(projectile1.damage);
                     }
                     
                     if (registry.all_of<Velocity>(entity1)) {
@@ -280,15 +293,14 @@ void projectile_system(entt::registry& registry, float dt) {
             
             }
         }
-
-        projectile1.time_elapsed += dt;
-        if (projectile1.time_elapsed >= projectile1.lifetime) {
-            to_destroy.push_back(entity1);
-        }
     }
 
+    
+
     for (auto entity : to_destroy) {
-        registry.destroy(entity);
+        if (registry.valid(entity)){
+            registry.destroy(entity);
+        }
     }
 
 }

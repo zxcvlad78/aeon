@@ -7,6 +7,7 @@
 #include "systems/UIComponentSystems.hpp"
 
 #include "game/mob/Systems.hpp"
+#include "game/ai/Systems.hpp"
 
 #include "utils/DebugText.hpp"
 #include "utils/math.hpp"
@@ -15,7 +16,7 @@
 #include "console/Console.hpp"
 
 bool debug_hitboxes = false;
-
+bool collision_enabled = true;
 
 int main() {
     std::time_t t = std::time(nullptr);
@@ -41,12 +42,28 @@ int main() {
                     int fps = std::stoi(args[0]);
                     window.setFramerateLimit(fps);
                 } catch (const std::exception& e) {
-                    //Console::get_instance().print_error("");
+                    Console::get_instance().print_error(e.what());
                 }
             }
         },
         "Set target framerate",
         "fps_max <value>"
+    );
+    Console::get_instance().register_command(
+        "collision.enabled",
+        [&window](const std::vector<std::string>& args) {
+            if (!args.empty()) {
+                try {
+                    int val = std::stoi(args[0]);
+                    collision_enabled = val > 0;
+                    Console::get_instance().print_success("Collision enabled: " + collision_enabled);
+                } catch (const std::exception& e) {
+                    Console::get_instance().print_error(e.what());
+                }
+            }
+        },
+        "Set collision enabled",
+        "collision.enabled <value>"
     );
 
 
@@ -127,7 +144,7 @@ int main() {
             registry.emplace<Camera>(player, player_camera);
     }
 
-    //Spawner
+    /*Spawner
     {auto spawner = registry.create();
         registry.emplace<ZIndex>(spawner, 1);
         registry.emplace<Transform>(spawner);
@@ -150,6 +167,7 @@ int main() {
             resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/spawner/spritesheet.json")).play("idle");
     
     }
+    */
 
     //Floor
     {auto floor = registry.create();
@@ -194,8 +212,10 @@ int main() {
 
         health_system(registry);
         
+        AISystems::update(registry, delta_time);
         mob_system(registry, delta_time);
         movement_system(registry, delta_time);
+        
         projectile_system(registry, delta_time);
         
         camera_system(registry, window, delta_time);

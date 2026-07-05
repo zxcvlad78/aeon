@@ -15,6 +15,7 @@ struct MobAttackRanged {
     Velocity initial_velocity;
     std::string projectile_atlas_path;
     std::string projectile_spritesheet_path;
+    
 };
 
 struct MobSpawner {
