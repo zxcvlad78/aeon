@@ -1,12 +1,30 @@
 #pragma once
 #include <entt/entt.hpp>
 #include "Resources.hpp"
-#include "../src/signal/Signal.hpp"
+#include "../src/event/Event.hpp"
 
 struct Transform {
     sf::Vector2f position;
     sf::Angle rotation_degrees;
     sf::Vector2f scale = {1.f, 1.f};
+
+    Transform& operator=(const Transform& t) {
+        if (this != &t) {
+            position = t.position;
+            rotation_degrees = t.rotation_degrees;
+            scale = t.scale;
+        }
+        return *this;
+    }
+
+    Transform& operator=(const Transform* t) {
+        if (t != nullptr && this != t) {
+            position = t->position;
+            rotation_degrees = t->rotation_degrees;
+            scale = t->scale;
+        }
+        return *this;
+    }
 };
 
 struct Velocity {
@@ -14,6 +32,11 @@ struct Velocity {
     float y = 0.0f;
     bool normalize = true;
 };
+
+struct GluedTo {
+    entt::entity entity = entt::null;
+};
+
 
 struct MoveSpeed {
     float value = 10.f;
@@ -100,9 +123,7 @@ struct Sprite {
     sf::Vector2f offset;
     bool center = true;
 
-    Sprite(entt::resource<sf::Texture> texture) : sprite(*texture) {
-        
-    }
+    Sprite(entt::resource<sf::Texture> texture) : sprite(*texture) { }
 };
 
 struct SpriteAnimation {

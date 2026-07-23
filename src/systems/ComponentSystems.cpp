@@ -38,6 +38,25 @@ void player_input_system(entt::registry& registry, sf::RenderWindow& window) {
     }
 }
 
+void glue_system(entt::registry& registry) {
+    auto view = registry.view<Transform, GluedTo>();
+
+    for (auto [entity, transform, glued_to] : view.each()) {
+        if (glued_to.entity == entt::null) {
+            std::cout << "e" << std::endl;
+            continue;
+        }
+
+        Transform* target_transform = registry.try_get<Transform>(glued_to.entity);
+        if (!target_transform) {
+            std::cout << "t" << std::endl;
+            continue;
+        }
+
+        std::cout << "sesessss" << std::endl;
+        transform = target_transform;
+    }
+}
 
 void movement_system(entt::registry& registry, float dt) {
     auto view = registry.view<Transform, Velocity>();
@@ -316,6 +335,7 @@ void health_system(entt::registry& registry) {
     }
 
     for (auto entity : to_destroy) {
+        if (!registry.valid(entity)) { continue; }
         registry.destroy(entity);
     }
 }

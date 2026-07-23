@@ -29,7 +29,7 @@ public:
     
     }
 
-    void play(entt::resource<sf::SoundBuffer> buffer, sf::Vector2f position = {0.f, 0.f}) {
+    void play(entt::resource<sf::SoundBuffer> buffer, sf::Vector2f position = {0.f, 0.f}, float min_distance = 100.f, float attenuation = 1.f) {
         if (buffer) play(*buffer, position);
     }
 };

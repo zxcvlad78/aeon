@@ -95,11 +95,12 @@ int main() {
             }
         },
         "Spawn",
-        "spawn_enemy <pos_x, pos_y>"
+        "spawn_enemy <x, y>"
     );
 
     //Player
-    {auto player = registry.create();
+    auto player = registry.create();
+    {
         registry.emplace<ZIndex>(player, 1);
         registry.emplace<Transform>(player).position = {50.f , 50.f};
         registry.emplace<Velocity>(player, 0.f, 0.f, true);
@@ -109,7 +110,7 @@ int main() {
         registry.emplace<Faction>(player, "player");
         registry.emplace<Health>(player, 100.f, 100.f);
         registry.emplace<MoveSpeed>(player, 100.0f);
-     
+        
         Hitbox player_hitbox;
             player_hitbox.size = {16.f, 32.f};
             player_hitbox.offset = {-player_hitbox.size.x / 2.f, -player_hitbox.size.y / 2.f};
@@ -144,10 +145,23 @@ int main() {
             registry.emplace<Camera>(player, player_camera);
     }
 
-    /*Spawner
+    {auto entity = registry.create();
+    auto& glued_to = registry.emplace<GluedTo>(entity, player);
+    auto& z_index = registry.emplace<ZIndex>(entity, 2);
+    auto& transform = registry.emplace<Transform>(entity);
+    auto& sprite = registry.emplace<Sprite>(entity,
+        resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/sharik/atlas.png"));
+    sprite.center = true;
+
+    auto& sprite_animation = registry.emplace<SpriteAnimation>(entity);
+
+    sprite_animation.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/sharik/spritesheet.json");
+    sprite_animation.play("idle");
+    }
+
     {auto spawner = registry.create();
-        registry.emplace<ZIndex>(spawner, 1);
-        registry.emplace<Transform>(spawner);
+        auto& z_index = registry.emplace<ZIndex>(spawner, 1);
+        auto& transform = registry.emplace<Transform>(spawner);
         registry.emplace<MobSpawner>(spawner,
             "res/textures/zloipacan/atlas.png",
             "res/textures/zloipacan/spritesheet.json",
@@ -167,7 +181,7 @@ int main() {
             resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/spawner/spritesheet.json")).play("idle");
     
     }
-    */
+    
 
     //Floor
     {auto floor = registry.create();
@@ -209,7 +223,7 @@ int main() {
         sf::Time elapsed = clock.restart();
         float delta_time = elapsed.asSeconds();
 
-
+        glue_system(registry);
         health_system(registry);
         
         AISystems::update(registry, delta_time);

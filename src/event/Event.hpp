@@ -3,14 +3,21 @@
 #include <utility>
 
 template<typename... Args>
-class Signal {
+class Event {
 private:
     std::vector<std::function<void(Args...)>> callbacks;
     
 public:
-    void connect(std::function<void(Args...)> callback) {
+    void listen(std::function<void(Args...)> callback) {
         if (callback) {
             callbacks.push_back(std::move(callback));
+        }
+    }
+
+
+    void unlisten(std::function<void(Args...)> callback) {
+        if (callbacks.find(callback)) {
+            callbacks.erase(callback);
         }
     }
 

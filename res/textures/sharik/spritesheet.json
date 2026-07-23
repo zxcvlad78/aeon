@@ -1,0 +1,17 @@
+{
+  "type": "SpritesheetResource",
+  "meta": {
+    "width": 128,
+    "height": 128
+  },
+  "animations": {
+    "idle": {
+      "fps": 2.0,
+      "looping": true,
+      "frames": [
+        { "x": 0,   "y": 0, "w": 16, "h": 16 },
+        { "x": 16,  "y": 0, "w": 16, "h": 16 }
+      ]
+    }
+  }
+}
