@@ -17,6 +17,7 @@
 
 bool debug_hitboxes = false;
 bool collision_enabled = true;
+bool enable_render_system = true;
 
 int main() {
     std::time_t t = std::time(nullptr);
@@ -65,6 +66,22 @@ int main() {
         "Set collision enabled",
         "collision.enabled <value>"
     );
+    Console::get_instance().register_command(
+        "render.enabled",
+        [&window](const std::vector<std::string>& args) {
+            if (!args.empty()) {
+                try {
+                    int val = std::stoi(args[0]);
+                    enable_render_system = val > 0;
+                    Console::get_instance().print_success("Collision enabled: " + collision_enabled);
+                } catch (const std::exception& e) {
+                    Console::get_instance().print_error(e.what());
+                }
+            }
+        },
+        "Set render enabled",
+        "render.enabled <value>"
+    );
 
 
     DebugText debug_text(Singleton::Variables::main_font);
@@ -106,7 +123,8 @@ int main() {
         registry.emplace<Velocity>(player, 0.f, 0.f, true);
         registry.emplace<SpriteAnimationControl>(player);
         registry.emplace<PlayerInput>(player);
-    
+        
+        registry.emplace<Attack>(player);
         registry.emplace<Faction>(player, "player");
         registry.emplace<Health>(player, 100.f, 100.f);
         registry.emplace<MoveSpeed>(player, 100.0f);
@@ -225,7 +243,8 @@ int main() {
 
         glue_system(registry);
         health_system(registry);
-        
+        attack_system_manager_handler(registry, delta_time);
+
         AISystems::update(registry, delta_time);
         mob_system(registry, delta_time);
         movement_system(registry, delta_time);

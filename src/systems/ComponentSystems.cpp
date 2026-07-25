@@ -8,6 +8,8 @@
 #include "../utils/math.hpp"
 #include "../console/Console.hpp"
 
+extern bool enable_render_system;
+
 void player_input_system(entt::registry& registry, sf::RenderWindow& window) {
     auto view = registry.view<PlayerInput, MoveSpeed, Velocity>();
 
@@ -21,7 +23,7 @@ void player_input_system(entt::registry& registry, sf::RenderWindow& window) {
         velocity.y += sf::Keyboard::isKeyPressed(sf::Keyboard::Key::S);
         velocity.x -= sf::Keyboard::isKeyPressed(sf::Keyboard::Key::A);
         velocity.x += sf::Keyboard::isKeyPressed(sf::Keyboard::Key::D);
-
+        
         velocity.x *= movespeed.value;
         velocity.y *= movespeed.value;
 
@@ -34,7 +36,48 @@ void player_input_system(entt::registry& registry, sf::RenderWindow& window) {
                 velocity.x *= 0.70710678118f;
                 velocity.y *= 0.70710678118f;
             }
-        }   
+        }
+    }
+}
+
+void attack_system_manager_handler(entt::registry& registry, float dt) {
+    auto view = registry.view<Attack, Transform, PlayerInput>();
+
+    static float projectile_speed = 100.f;
+
+    for (auto [entity, attack, transform, player_input] : view.each()) {
+        if (attack.in_cooldown()) {
+            attack.cooldown -= dt;
+            continue;
+        }
+
+        Velocity vel;
+
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
+            vel.y = -1.f * projectile_speed;
+        }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
+            vel.y = 1.f * projectile_speed;
+        }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
+            vel.x = -1.f * projectile_speed;
+        }
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
+            vel.x = 1.f * projectile_speed;
+        }
+
+        if (vel.x == 0.f && vel.y == 0.f) continue;
+
+        attack.cooldown = attack.interval;
+        Singleton::spawn_projectile(registry,
+            Projectile {
+                10.f, 10.f,
+                entity,
+                
+            },
+            transform,
+            vel
+        );
     }
 }
 
@@ -43,17 +86,14 @@ void glue_system(entt::registry& registry) {
 
     for (auto [entity, transform, glued_to] : view.each()) {
         if (glued_to.entity == entt::null) {
-            std::cout << "e" << std::endl;
             continue;
         }
 
         Transform* target_transform = registry.try_get<Transform>(glued_to.entity);
         if (!target_transform) {
-            std::cout << "t" << std::endl;
             continue;
         }
 
-        std::cout << "sesessss" << std::endl;
         transform = target_transform;
     }
 }
@@ -234,6 +274,8 @@ void render_healthbar(entt::registry& registry, sf::RenderWindow& window) {
 }
 
 void render_system(entt::registry& registry, sf::RenderWindow& window) {
+    if (!enable_render_system) return;
+    
     sprite_system(registry, window);
     render_healthbar(registry, window);
 
@@ -261,7 +303,7 @@ void projectile_system(entt::registry& registry, float dt) {
             to_destroy.push_back(entity1);
             continue;
         }
-
+        
         if (!collision_enabled) { continue; }
         if (projectile1.damaged_entity != entt::null) { continue; }
 

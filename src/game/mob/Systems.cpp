@@ -9,9 +9,10 @@
 #include "../../SoundPlayer.hpp"
 
 void mob_system(entt::registry& registry, float dt) {
+    mob_spawner_system(registry, dt);
+    return;
     mob_movement_system(registry, dt);
     mob_attack_ranged_system(registry, dt);
-    mob_spawner_system(registry, dt);
 }
 
 void mob_movement_system(entt::registry& registry, float dt) {
@@ -103,7 +104,10 @@ void mob_attack_ranged_system(entt::registry& registry, float dt) {
         
         mob_attack.cooldown = mob_attack.interval;
         
-        Transform enemy_transform = registry.get<Transform>(enemy);
+        Transform* enemy_transform = registry.try_get<Transform>(enemy);
+        if (!enemy_transform) {
+            return;
+        }
         
         sf::Vector2f enemy_velocity{0.0f, 0.0f};
         if (registry.all_of<Velocity>(enemy)) {
@@ -113,10 +117,10 @@ void mob_attack_ranged_system(entt::registry& registry, float dt) {
 
 
         float projectile_speed = std::hypot(mob_attack_ranged.initial_velocity.x, mob_attack_ranged.initial_velocity.y);
-        float distance = std::hypot(enemy_transform.position.x - transform.position.x, enemy_transform.position.y - transform.position.y);
+        float distance = std::hypot(enemy_transform->position.x - transform.position.x, enemy_transform->position.y - transform.position.y);
         float travel_time = (projectile_speed > 0.0f) ? (distance / projectile_speed) : 0.0f;
 
-        sf::Vector2f predicted_enemy_pos = enemy_transform.position + enemy_velocity * travel_time;
+        sf::Vector2f predicted_enemy_pos = enemy_transform->position + enemy_velocity * travel_time;
         sf::Vector2f dir = Math::get_direction(transform.position, predicted_enemy_pos);
 
 

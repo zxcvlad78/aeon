@@ -166,6 +166,7 @@ struct HealthBar {
     float outline_thickness = 1.0f;
 };
 
+
 struct TileMap {
 
 };
