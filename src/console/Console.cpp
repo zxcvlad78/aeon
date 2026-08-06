@@ -83,7 +83,6 @@ void Console::print(const std::string& text, sf::Color color) {
         total_string += msg.text + "\n";
     }
     output_text->setString(total_string);
-    scroll_offset = 0.f;
 }
 
 void Console::print_error(const std::string& text) {
@@ -113,7 +112,7 @@ void Console::execute_command(const std::string& command_line) {
     if (command_line.empty()) return;
     
     add_to_history(command_line);
-    print("] " + command_line, sf::Color(150, 150, 150));
+    print("> " + command_line, sf::Color(150, 150, 150));
     
     std::istringstream iss(command_line);
     std::string cmd_name;
@@ -327,9 +326,18 @@ void Console::update(sf::RenderWindow& window, float dt) {
     float output_y = head_rect.getSize().y + 5.f;
     output_text->setPosition({15.f, output_y - scroll_offset});
     output_text->setCharacterSize(char_size);
+    
+    previous_max_scroll = max_scroll;
+    was_at_bottom = (scroll_offset >= max_scroll - 2.f);
 
     update_scrollbar();
-    
+    clamp_scroll();
+
+    if (was_at_bottom && messages.size() > 0) {
+        scroll_offset = max_scroll;
+        clamp_scroll();
+    }
+
     if (!input_string.empty()) {
         auto suggestions = get_suggestions(input_string);
         if (!suggestions.empty()) {
@@ -356,7 +364,7 @@ void Console::render(sf::RenderWindow& window) {
     window.draw(input_rect);
     window.draw(*input_rect_text);
     
-    if (cursor_visible && !input_string.empty()) {
+    if (cursor_visible) {
         window.draw(cursor_rect);
     }
     

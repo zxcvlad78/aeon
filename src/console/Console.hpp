@@ -66,6 +66,9 @@ private:
     sf::Color foreground_color = sf::Color(25, 25, 25, 255);
     sf::Color background_color = sf::Color(15, 15, 15, 240);
 
+
+    float previous_max_scroll = 0.f;
+    bool was_at_bottom = false;  
 public:
     static Console& get_instance();
     

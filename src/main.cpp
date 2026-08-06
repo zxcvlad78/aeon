@@ -111,7 +111,7 @@ int main() {
             if (!args.empty()) {
                 try {
                     float val = std::stof(args[0]);
-                    if (val > 0.f) {
+                    if (val >= 0.f) {
                         speed_scale = val;
                         Console::get_instance().print_success("Speed scale set to: " + std::to_string(speed_scale));
                     } else {
@@ -168,7 +168,7 @@ int main() {
         attack.spawn_func = packed_entity::default_projectile::spawn;
         
         registry.emplace<Faction>(player, "player");
-        registry.emplace<Health>(player, 100.f, 100.f);
+        //registry.emplace<Health>(player, 100.f, 100.f);
         registry.emplace<MoveSpeed>(player, 100.0f);
         
         Hitbox player_hitbox;
