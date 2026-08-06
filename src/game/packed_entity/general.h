@@ -44,6 +44,40 @@ namespace default_projectile {
     }
 }
 
+namespace gad {
+    inline entt::entity spawn(entt::registry& registry) {
+        entt::entity entity = registry.create(); {
+            registry.emplace<Mob>(entity);
+            auto& z_index = registry.emplace<ZIndex>(entity, 1);
+            auto& transform = registry.emplace<Transform>(entity);
+            
+            auto& health = registry.emplace<Health>(entity, 250.f, 250.f);
+            auto& faction = registry.emplace<Faction>(entity, "gadi");
+
+            auto& hitbox = registry.emplace<Hitbox>(entity); {
+                hitbox.size = {16.f, 32.f};
+                hitbox.offset = {-hitbox.size.x / 2.f, -hitbox.size.y / 2.f};
+            }
+
+            auto& sprite = registry.emplace<Sprite>(entity,
+                resourceloader.load<
+                sf::Texture, sf::TextureLoader
+                >("res/textures/gad/atlas.png") // texture path
+            ); {
+                sprite.offset = {-8.f, -16.f};
+            }
+            auto& sprite_animation = registry.emplace<SpriteAnimation>(entity); {
+                sprite_animation.spritesheet = resourceloader.load<
+                Spritesheet::Resource, Spritesheet::Loader
+                >("res/textures/gad/spritesheet.json"); // spritesheet path
+                sprite_animation.play("idle");
+            }
+        }
+        
+        return entity;
+    }
+};
+
 namespace zobi {
     inline entt::entity spawn(entt::registry& registry) {
         entt::entity entity = registry.create(); {
@@ -60,6 +94,7 @@ namespace zobi {
             auto& faction = registry.emplace<Faction>(entity, "enemy");
             auto& enemy_factions = registry.emplace<EnemyFactions>(entity); {
                 enemy_factions.add("player");
+                enemy_factions.add("gadi");
             }
             auto& attack = registry.emplace<Attack>(entity); 
             attack.spawn_func = packed_entity::default_projectile::spawn;
