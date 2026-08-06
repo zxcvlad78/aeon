@@ -23,6 +23,8 @@ public:
 
     template <typename T, typename Loader, typename ...Args>
     entt::resource<T> load(const std::string path, Args&&... args) {
+        if (path.empty()) return entt::resource<T>{nullptr};
+
         auto id = entt::hashed_string{path.c_str()};
         auto& cache = get_cache<T, Loader>();
 

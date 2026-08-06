@@ -1,0 +1,24 @@
+{
+    "type": "prefab",
+    "display_name": "Zobi",
+    "components":
+    [
+        "Mob",
+        "Transform", 0.0, 0.0, 0.0,
+        "Velocity",
+        "ZIndex", 1,
+        "SpriteAnimationControl",
+        "Health", 10, 100,
+        "MoveSpeed", 50,
+        "AITarget",
+        "Faction", "zombie",
+        "EnemyFactions", "player",
+        "Attack",
+        "MobAttackRanged",
+        "Hitbox",
+        "Sprite",
+        "SpriteAnimation",
+        "HealthBar"
+    ]
+
+}

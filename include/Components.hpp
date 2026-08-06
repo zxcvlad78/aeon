@@ -3,6 +3,8 @@
 #include "Resources.hpp"
 #include "../src/event/Event.hpp"
 
+#include <functional>
+
 struct Transform {
     sf::Vector2f position;
     sf::Angle rotation_degrees;
@@ -90,6 +92,9 @@ struct Hitbox {
 struct Projectile {
     float damage = 10.f;
     float lifetime = 10.f;
+
+    float speed = 100.f;
+
     entt::entity source = entt::null;
     entt::resource<sf::SoundBuffer> hit_soundbuffer;
 
@@ -99,9 +104,9 @@ struct Projectile {
 
 struct Attack {
     float interval = 1.f;
-
-    float cooldown = 1.f;
+    std::function<entt::entity(entt::registry&, entt::entity)> spawn_func;
     
+    float cooldown = 1.f;
     bool in_cooldown() { return cooldown > 0.f; }
 };
 
@@ -166,7 +171,3 @@ struct HealthBar {
     float outline_thickness = 1.0f;
 };
 
-
-struct TileMap {
-
-};

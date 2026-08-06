@@ -1,4 +1,3 @@
-#pragma once
 #include "../faction/Components.hpp"
 #include "Components.hpp"
 
@@ -6,7 +5,6 @@ void mob_system(entt::registry& registry, float dt);
 
 void mob_movement_system(entt::registry& registry, float dt);
 void mob_attack_ranged_system(entt::registry& registry, float dt);
-void mob_spawner_system(entt::registry& registry, float dt);
 
 namespace MobFunc {
     std::vector<entt::entity> get_enemies(entt::registry& registry, entt::entity from);

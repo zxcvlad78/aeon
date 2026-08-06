@@ -3,11 +3,16 @@
 #include "SoundPlayer.hpp"
 #include "game/singleton/singleton.hpp"
 
+#include "game/packed_entity/general.h"
+
 #include "systems/ComponentSystems.hpp"
 #include "systems/UIComponentSystems.hpp"
 
 #include "game/mob/Systems.hpp"
 #include "game/ai/Systems.hpp"
+
+#include "game/mob_spawner/Components.hpp"
+#include "game/mob_spawner/Systems.hpp"
 
 #include "utils/DebugText.hpp"
 #include "utils/math.hpp"
@@ -18,6 +23,8 @@
 bool debug_hitboxes = false;
 bool collision_enabled = true;
 bool enable_render_system = true;
+
+float speed_scale = 1.0f;
 
 int main() {
     std::time_t t = std::time(nullptr);
@@ -82,6 +89,45 @@ int main() {
         "Set render enabled",
         "render.enabled <value>"
     );
+    Console::get_instance().register_command(
+        "render.enabled",
+        [&window](const std::vector<std::string>& args) {
+            if (!args.empty()) {
+                try {
+                    int val = std::stoi(args[0]);
+                    enable_render_system = val > 0;
+                    Console::get_instance().print_success("Render enabled: " + std::to_string(enable_render_system));
+                } catch (const std::exception& e) {
+                    Console::get_instance().print_error(e.what());
+                }
+            }
+        },
+        "Set render enabled",
+        "render.enabled <value>"
+    );
+    Console::get_instance().register_command(
+        "speed",
+        [](const std::vector<std::string>& args) {
+            if (!args.empty()) {
+                try {
+                    float val = std::stof(args[0]);
+                    if (val > 0.f) {
+                        speed_scale = val;
+                        Console::get_instance().print_success("Speed scale set to: " + std::to_string(speed_scale));
+                    } else {
+                        Console::get_instance().print_error("Speed scale must be positive");
+                    }
+                } catch (const std::exception& e) {
+                    Console::get_instance().print_error(e.what());
+                }
+            } else {
+                Console::get_instance().print_success("Current speed scale: " + std::to_string(speed_scale));
+            }
+        },
+        "Set time speed multiplier",
+        "speed <value>"
+    );
+
 
 
     DebugText debug_text(Singleton::Variables::main_font);
@@ -93,13 +139,7 @@ int main() {
         [&registry](const std::vector<std::string>& args) {
             if (!args.empty()) {
                 try {
-                    auto e = Singleton::spawn_enemy(registry,
-                        "res/textures/zloipacan/atlas.png",
-                        "res/textures/zloipacan/spritesheet.json",
-                        "res/textures/t_projectile/atlas.png",
-                        "res/textures/t_projectile/spritesheet.json",
-                        "res/audio/bulk.wav"
-                    );
+                    auto e = packed_entity::zobi::spawn(registry);
                     auto t = registry.try_get<Transform>(e);
                     if (t) {
                         t->position.x = static_cast<float>(std::stoi(args[0]));
@@ -124,7 +164,9 @@ int main() {
         registry.emplace<SpriteAnimationControl>(player);
         registry.emplace<PlayerInput>(player);
         
-        registry.emplace<Attack>(player);
+        auto& attack = registry.emplace<Attack>(player);
+        attack.spawn_func = packed_entity::default_projectile::spawn;
+        
         registry.emplace<Faction>(player, "player");
         registry.emplace<Health>(player, 100.f, 100.f);
         registry.emplace<MoveSpeed>(player, 100.0f);
@@ -180,17 +222,12 @@ int main() {
     {auto spawner = registry.create();
         auto& z_index = registry.emplace<ZIndex>(spawner, 1);
         auto& transform = registry.emplace<Transform>(spawner);
-        registry.emplace<MobSpawner>(spawner,
-            "res/textures/zloipacan/atlas.png",
-            "res/textures/zloipacan/spritesheet.json",
-            "res/textures/t_projectile/atlas.png",
-            "res/textures/t_projectile/spritesheet.json",
-            "res/audio/bulk.wav",
-    
-            5.5f,
-            sf::Vector2(450.f, 450.f),
-            resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/wither-spawn.mp3")
-        );
+        auto& mob_spawner = registry.emplace<MobSpawner>(spawner); {
+            mob_spawner.spawn_func = packed_entity::zobi::spawn;
+            mob_spawner.cooldown = 5.5f;
+            mob_spawner.spawn_range = sf::Vector2(450.f, 450.f);
+            mob_spawner.spawn_soundbuffer = resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/wither-spawn.mp3");
+        }
     
     
         registry.emplace<Sprite>(spawner, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/spawner/atlas.png"));
@@ -239,15 +276,17 @@ int main() {
         }
 
         sf::Time elapsed = clock.restart();
-        float delta_time = elapsed.asSeconds();
+        float delta_time = elapsed.asSeconds() * speed_scale;
 
-        glue_system(registry);
         health_system(registry);
         attack_system_manager_handler(registry, delta_time);
-
+        
         AISystems::update(registry, delta_time);
         mob_system(registry, delta_time);
+        mob_spawner_system(registry, delta_time);
+        
         movement_system(registry, delta_time);
+        glue_system(registry);
         
         projectile_system(registry, delta_time);
         

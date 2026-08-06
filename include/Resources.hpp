@@ -135,13 +135,18 @@ namespace Spritesheet
 
 };
 
+
 namespace TileSet
 {
     struct Resource {
         std::shared_ptr<sf::Texture> texture;
+        sf::Vector2u size() {
+            if (texture == nullptr) return sf::Vector2u{ 0, 0 };
+            return texture->getSize();
+        }
         
-        unsigned int tile_size = 16;
-        int y_sort_origin = 0;
+        unsigned short tile_size = 16;
+        short y_sort_origin = 0;
     };
 
     struct Loader {
@@ -153,4 +158,4 @@ namespace TileSet
         }
     };
 
-}
+};

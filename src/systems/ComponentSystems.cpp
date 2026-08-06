@@ -43,7 +43,6 @@ void player_input_system(entt::registry& registry, sf::RenderWindow& window) {
 void attack_system_manager_handler(entt::registry& registry, float dt) {
     auto view = registry.view<Attack, Transform, PlayerInput>();
 
-    static float projectile_speed = 100.f;
 
     for (auto [entity, attack, transform, player_input] : view.each()) {
         if (attack.in_cooldown()) {
@@ -51,33 +50,35 @@ void attack_system_manager_handler(entt::registry& registry, float dt) {
             continue;
         }
 
-        Velocity vel;
+        if (attack.spawn_func == nullptr) continue;
+
+        sf::Vector2f dir { };
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up)) {
-            vel.y = -1.f * projectile_speed;
-        }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
-            vel.y = 1.f * projectile_speed;
-        }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
-            vel.x = -1.f * projectile_speed;
-        }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
-            vel.x = 1.f * projectile_speed;
+            dir.y = -1.f;
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down)) {
+            dir.y = 1.f;
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Left)) {
+            dir.x = -1.f;
+        } else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Right)) {
+            dir.x = 1.f;
         }
 
-        if (vel.x == 0.f && vel.y == 0.f) continue;
+        if (dir.x == 0.0f && dir.y == 0.0f) continue;
+
+        auto projectile = attack.spawn_func(registry, entity); {
+            if (auto* t = registry.try_get<Transform>(projectile)) {
+                t->position = transform.position;
+            }
+            if (auto* p = registry.try_get<Projectile>(projectile)) {
+                if (auto* v = registry.try_get<Velocity>(projectile)) {
+                    v->x = dir.x * p->speed;
+                    v->y = dir.y * p->speed;
+                }
+            }
+        }
 
         attack.cooldown = attack.interval;
-        Singleton::spawn_projectile(registry,
-            Projectile {
-                10.f, 10.f,
-                entity,
-                
-            },
-            transform,
-            vel
-        );
     }
 }
 

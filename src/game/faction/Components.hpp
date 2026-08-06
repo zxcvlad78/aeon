@@ -17,4 +17,7 @@ struct EnemyFactions {
     void add(const std::string& faction_id) {
         list.push_back(faction_id);
     }
+    void remove(const std::string& faction_id) {
+        
+    }
 };
