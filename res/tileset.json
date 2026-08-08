@@ -1,11 +1,7 @@
 {
     "type": "TilesetResource",
-    "texture_path": "res/textures/tileset.png",
-    "meta":
-    {
-        "width": 128,
-        "height": 128
-    },
+    "tile_size": 16,
+    "texture_path": "res/textures/tilesets/tileset.png",
     
     "tiles":
     {

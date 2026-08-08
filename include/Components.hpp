@@ -1,7 +1,6 @@
 #pragma once
 #include <entt/entt.hpp>
 #include "Resources.hpp"
-#include "../src/event/Event.hpp"
 
 #include <functional>
 

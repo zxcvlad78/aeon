@@ -14,6 +14,10 @@
 #include "game/mob_spawner/Components.hpp"
 #include "game/mob_spawner/Systems.hpp"
 
+
+#include "game/tilemap/Components.hpp"
+#include "game/tilemap/Systems.hpp"
+
 #include "utils/DebugText.hpp"
 #include "utils/math.hpp"
 #include <ctime>
@@ -269,9 +273,18 @@ int main() {
     
 
     //Floor
-    {auto floor = registry.create();
-        registry.emplace<Transform>(floor);
-        registry.emplace<Sprite>(floor, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/floor.png"));
+    //{auto floor = registry.create();
+    //    registry.emplace<Transform>(floor);
+    //    registry.emplace<Sprite>(floor, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/floor.png"));
+    //}
+
+    // TileMap
+    {auto entity = registry.create();
+        registry.emplace<Transform>(entity);
+        auto& tilemap = registry.emplace<TileMap>(entity); {
+            tilemap.tileset = resourceloader.load<TileSet::Resource, TileSet::Loader>("res/tileset.json");
+            tilemap.load_tiles("res/tilemap.json");
+        }
     }
 
 
@@ -329,6 +342,7 @@ int main() {
 
         window.clear(sf::Color::Blue);
 
+        render_tilemap(registry, window);
         render_system(registry, window);
         
         window.setView(window.getDefaultView()); 

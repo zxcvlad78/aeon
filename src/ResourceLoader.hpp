@@ -1,7 +1,7 @@
 #pragma once
-
 #include "Resources.hpp"
 #include <entt/resource/cache.hpp>
+#include <entt/core/hashed_string.hpp>
 
 class ResourceLoader {
 private:
