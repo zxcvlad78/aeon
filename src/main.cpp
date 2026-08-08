@@ -235,7 +235,10 @@ int main() {
 
     {auto spawner = registry.create();
         auto& z_index = registry.emplace<ZIndex>(spawner, 1);
-        auto& transform = registry.emplace<Transform>(spawner);
+        auto& transform = registry.emplace<Transform>(spawner); {
+            transform.position.x = 144.f;
+            transform.position.y = 112.f;
+        }
         auto& mob_spawner = registry.emplace<MobSpawner>(spawner); {
             mob_spawner.spawn_func = packed_entity::zobi::spawn;
             mob_spawner.cooldown = 5.5f;
@@ -254,7 +257,8 @@ int main() {
     {auto spawner = registry.create();
         auto& z_index = registry.emplace<ZIndex>(spawner, 1);
         auto& transform = registry.emplace<Transform>(spawner); {
-            transform.position.x = 45.f;
+            transform.position.x = 128.f;
+            transform.position.y = 96.f;
         }
         auto& mob_spawner = registry.emplace<MobSpawner>(spawner); {
             mob_spawner.spawn_func = packed_entity::gad::spawn;
