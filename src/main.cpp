@@ -229,7 +229,7 @@ int main() {
         auto& mob_spawner = registry.emplace<MobSpawner>(spawner); {
             mob_spawner.spawn_func = packed_entity::gad::spawn;
             mob_spawner.cooldown = 5.f;
-            mob_spawner.spawn_range = sf::Vector2(450.f, 450.f);
+            mob_spawner.spawn_range = sf::Vector2(-450.f, 450.f);
             mob_spawner.spawn_soundbuffer = resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/creeper-death.mp3");
         }
     
@@ -301,7 +301,7 @@ int main() {
         
         AISystems::update(registry, scaled_delta_time);
         mob_system(registry, scaled_delta_time);
-        mob_spawner_system(registry, scaled_delta_time);
+        MobSpawnerSystems::update(registry, scaled_delta_time);
         
         vector2_testing_system(registry, scaled_delta_time);
 

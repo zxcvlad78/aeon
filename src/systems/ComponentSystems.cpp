@@ -166,7 +166,6 @@ void sprite_animation_system(entt::registry& registry, float dt) {
         if (!sprite_anim.is_playing || !sprite_anim.current_animation || sprite_anim.current_animation->frames.empty()) {
             continue;
         }
-
         
         sprite_anim.time_accumulator += dt;
         float frame_duration = 1.0f / sprite_anim.current_animation->fps;
@@ -179,7 +178,10 @@ void sprite_animation_system(entt::registry& registry, float dt) {
                 if (sprite_anim.current_animation->is_looping) {
                     sprite_anim.current_frame_idx = 0;
                 } else {
-                    sprite_anim.is_playing = false;
+                    if (sprite_anim.next_anim.empty()) {
+                        sprite_anim.is_playing = false;
+                    } else sprite_anim.play(sprite_anim.next_anim);
+
                     break;
                 }
             } else {
@@ -189,7 +191,6 @@ void sprite_animation_system(entt::registry& registry, float dt) {
 
         const FrameData& frame = sprite_anim.current_animation->frames[sprite_anim.current_frame_idx];
         sprite.sprite.setTextureRect(sf::IntRect({frame.x, frame.y}, {frame.w, frame.h}));
-
     }
 }
 

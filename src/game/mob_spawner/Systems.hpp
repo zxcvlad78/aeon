@@ -1,3 +1,6 @@
 #include "Components.hpp"
 
-void mob_spawner_system(entt::registry& registry, float dt);
+namespace MobSpawnerSystems {
+    void update(entt::registry& registry, float dt);
+    void process_events(entt::registry& registry);
+}

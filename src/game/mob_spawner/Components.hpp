@@ -12,3 +12,7 @@ struct MobSpawner {
     float cooldown = 0.f;
     bool in_cooldown() { return cooldown > 0.f; }
 };
+
+struct MobSpawnerSpawnEvent {
+    entt::entity entity;
+};
