@@ -364,7 +364,7 @@ int main() {
 
         Console::get_instance().update(window, delta_time);
 
-        window.clear(sf::Color::Blue);
+        window.clear(sf::Color::Black);
 
         render_tilemap(registry, window);
         render_system(registry, window);

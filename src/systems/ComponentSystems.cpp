@@ -72,8 +72,8 @@ void attack_system_manager_handler(entt::registry& registry, float dt) {
             }
             if (auto* p = registry.try_get<Projectile>(projectile)) {
                 if (auto* v = registry.try_get<Velocity>(projectile)) {
-                    v->x = dir.x * p->speed;
-                    v->y = dir.y * p->speed;
+                    v->x = (dir.x * p->speed);
+                    v->y = (dir.y * p->speed);
                 }
             }
         }
