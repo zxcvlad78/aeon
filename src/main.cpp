@@ -22,6 +22,8 @@
 #include "utils/math.hpp"
 #include <ctime>
 
+#include "utils/rng.hpp"
+
 #include "console/Console.hpp"
 
 bool debug_hitboxes = false;
@@ -84,22 +86,6 @@ int main() {
                 try {
                     int val = std::stoi(args[0]);
                     enable_render_system = val > 0;
-                    Console::get_instance().print_success("Collision enabled: " + collision_enabled);
-                } catch (const std::exception& e) {
-                    Console::get_instance().print_error(e.what());
-                }
-            }
-        },
-        "Set render enabled",
-        "render.enabled <value>"
-    );
-    Console::get_instance().register_command(
-        "render.enabled",
-        [&window](const std::vector<std::string>& args) {
-            if (!args.empty()) {
-                try {
-                    int val = std::stoi(args[0]);
-                    enable_render_system = val > 0;
                     Console::get_instance().print_success("Render enabled: " + std::to_string(enable_render_system));
                 } catch (const std::exception& e) {
                     Console::get_instance().print_error(e.what());
@@ -133,31 +119,9 @@ int main() {
     );
 
 
-
     DebugText debug_text(Singleton::Variables::main_font);
     
     entt::registry registry;
-
-    Console::get_instance().register_command(
-        "spawn_enemy",
-        [&registry](const std::vector<std::string>& args) {
-            if (!args.empty()) {
-                try {
-                    auto e = packed_entity::zobi::spawn(registry);
-                    auto t = registry.try_get<Transform>(e);
-                    if (t) {
-                        t->position.x = static_cast<float>(std::stoi(args[0]));
-                        t->position.y = static_cast<float>(std::stoi(args[1]));
-                    }
-
-                } catch (const std::exception& e) {
-                    Console::get_instance().print_error(e.what());
-                }
-            }
-        },
-        "Spawn",
-        "spawn_enemy <x, y>"
-    );
 
     auto paren = packed_entity::gad::spawn(registry); {
         if (auto* t = registry.try_get<Transform>(paren)) {
@@ -178,8 +142,10 @@ int main() {
         registry.emplace<SpriteAnimationControl>(player);
         registry.emplace<PlayerInput>(player);
         
-        auto& attack = registry.emplace<Attack>(player);
-        attack.spawn_func = packed_entity::default_projectile::spawn;
+        auto& attack = registry.emplace<Attack>(player); {
+            attack.spawn_func = packed_entity::default_projectile::spawn;
+            attack.interval = 0.2f; 
+        }
         
         registry.emplace<Faction>(player, "player");
         //registry.emplace<Health>(player, 100.f, 100.f);
@@ -211,8 +177,8 @@ int main() {
             player_camera.view = sf::View(
                     {0.f, 0.f},
                     {
-                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.x) / 3.5f,
-                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.y) / 3.5f
+                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.x) / 3.0f,
+                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.y) / 3.0f
                     }
                 );
                  
@@ -293,22 +259,10 @@ int main() {
         }
     }
 
-    // t_fire 
-    {auto entity = registry.create();
-        auto& transform = registry.emplace<Transform>(entity); {
-            transform.position = { 128.f, 256.f };
-        }
-
-        auto& sprite = registry.emplace<Sprite>(entity,
-            resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/t_fire/atlas.png")
-        );
-        auto& sprite_animation = registry.emplace<SpriteAnimation>(entity,
-            resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/t_fire/spritesheet.json")
-        ); {
-            sprite_animation.play("idle");
-        }
+    //twotaunt
+    for (int i = 1; i <= 3; i++) {
+        packed_entity::twotaunt::spawn(registry, static_cast<float>(i));
     }
-
 
     //MainLoop
     while (window.isOpen())
@@ -320,7 +274,6 @@ int main() {
                 window.close();
             }
 
-            
             player_input_system(registry, window);
             
             if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>())
@@ -336,31 +289,31 @@ int main() {
                 }
             }
             
-            
             Console::get_instance().handle_event(*event, window);
         }
 
         sf::Time elapsed = clock.restart();
-        float delta_time = elapsed.asSeconds() * speed_scale;
+        float delta_time = elapsed.asSeconds();
+        float scaled_delta_time = delta_time * speed_scale;
 
         health_system(registry);
-        attack_system_manager_handler(registry, delta_time);
+        attack_system_manager_handler(registry, scaled_delta_time);
         
-        AISystems::update(registry, delta_time);
-        mob_system(registry, delta_time);
-        mob_spawner_system(registry, delta_time);
+        AISystems::update(registry, scaled_delta_time);
+        mob_system(registry, scaled_delta_time);
+        mob_spawner_system(registry, scaled_delta_time);
         
-        vector2_testing_system(registry, delta_time);
+        vector2_testing_system(registry, scaled_delta_time);
 
-        movement_system(registry, delta_time);
+        movement_system(registry, scaled_delta_time);
         glue_system(registry);
         
-        projectile_system(registry, delta_time);
+        projectile_system(registry, scaled_delta_time);
         
-        camera_system(registry, window, delta_time);
+        camera_system(registry, window, scaled_delta_time);
 
         sprite_animation_control_system(registry);
-        sprite_animation_system(registry, delta_time);
+        sprite_animation_system(registry, scaled_delta_time);
 
         Console::get_instance().update(window, delta_time);
 

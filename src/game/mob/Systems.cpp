@@ -47,9 +47,9 @@ void mob_movement_system(entt::registry& registry, float dt) {
 
 
 void mob_attack_ranged_system(entt::registry& registry, float dt) {
-    auto view = registry.view<Mob, Transform, Attack, MobAttackRanged, AIComponents::AITarget>();
+    auto view = registry.view<Mob, Transform, Attack, AIComponents::AITarget, MobAttackRanged>();
 
-    for (auto [entity, transform, mob_attack, mob_attack_ranged, ai_target] : view.each()) {
+    for (auto [entity, transform, mob_attack, ai_target] : view.each()) {
         if (mob_attack.in_cooldown()) {
             mob_attack.cooldown -= dt;
             continue;
@@ -84,9 +84,8 @@ void mob_attack_ranged_system(entt::registry& registry, float dt) {
             
             if (auto* projectile = registry.try_get<Projectile>(projectile_entity)) {
                 if (auto* v = registry.try_get<Velocity>(projectile_entity)) {
-                    float projectile_speed = std::hypot(mob_attack_ranged.initial_velocity.x, mob_attack_ranged.initial_velocity.y);
                     float distance = std::hypot(enemy_transform->position.x - transform.position.x, enemy_transform->position.y - transform.position.y);
-                    float travel_time = (projectile_speed > 0.0f) ? (distance / projectile_speed) : 0.0f;
+                    float travel_time = distance;
                     sf::Vector2f predicted_enemy_pos = enemy_transform->position + enemy_velocity * travel_time;
                     sf::Vector2f dir = Math::get_direction(transform.position, predicted_enemy_pos);
                     v->x = projectile->speed * dir.x;

@@ -203,7 +203,9 @@ void sprite_system(entt::registry& registry, sf::RenderWindow& window) {
         int z_index;
     };
 
-    std::vector<Renderable> renderables;
+    static std::vector<Renderable> renderables;
+    renderables.clear();
+    renderables.reserve(registry.view<Transform, Sprite>().size_hint());
 
     for (auto [entity, transform, sprite] : registry.view<Transform, Sprite>().each()) {
         if (sprite.center) {

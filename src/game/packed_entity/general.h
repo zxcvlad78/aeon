@@ -6,7 +6,10 @@
 #include "../ai/Components.hpp"
 #include "../../ResourceLoader.hpp"
 
+#include "../../utils/rng.hpp"
+
 namespace packed_entity {
+
 
 namespace default_projectile {
     inline entt::entity spawn(entt::registry& registry, entt::entity source = entt::null) {
@@ -43,6 +46,62 @@ namespace default_projectile {
         return entity;
     }
 }
+
+namespace mo4a_projectile {
+    inline entt::entity spawn(entt::registry& registry, entt::entity source = entt::null) {
+        auto entity = packed_entity::default_projectile::spawn(registry, source);
+        if (auto* sprite = registry.try_get<Sprite>(entity)) {
+            sprite->sprite.setTexture(
+                resourceloader.load<
+                sf::Texture, sf::TextureLoader
+                >("res/textures/e_projectile/atlas.png")
+            );
+        }
+
+        return entity;
+    }
+}
+
+namespace sprite_animation_entity {
+    inline entt::entity spawn(
+        entt::registry& registry,
+        const std::string& sprite_path,
+        const std::string& sheet_path,
+        const std::string& anim_name = "default"
+    ) {
+        
+        entt::entity entity = registry.create(); {
+            auto& transform = registry.emplace<Transform>(entity);
+
+            auto& sprite = registry.emplace<Sprite>(entity,
+                resourceloader.load<sf::Texture, sf::TextureLoader>(sprite_path)
+            );
+            auto& sprite_animation = registry.emplace<SpriteAnimation>(entity,
+                resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>(sheet_path)
+            ); {
+                sprite_animation.play(anim_name);
+                //
+            }
+        }
+        return entity;
+    }
+};
+
+namespace twotaunt {
+    inline entt::entity spawn(entt::registry& registry, float multiplier = 1.f) {
+        auto enitity = packed_entity::sprite_animation_entity::spawn(registry,
+            "res/textures/cmex/2taunt.png", "res/textures/cmex/spritesheet.json", "default"
+        ); if (auto* t = registry.try_get<Transform>(enitity)) {
+            t->scale = {0.35f, 0.35f};
+            t->position.x = game_rng::random<float>(32.f * multiplier, 256.f * multiplier);
+            t->position.y = game_rng::random<float>(15.f * multiplier, 64.f * multiplier);
+        } if (auto* s = registry.try_get<Sprite>(enitity)) { s->center = false; }
+        registry.emplace_or_replace<ZIndex>(enitity, 2);
+
+        return enitity;
+    }
+
+};
 
 namespace gad {
     inline entt::entity spawn(entt::registry& registry) {
@@ -97,23 +156,9 @@ namespace zobi {
                 enemy_factions.add("gadi");
             }
             auto& attack = registry.emplace<Attack>(entity); 
-            attack.spawn_func = packed_entity::default_projectile::spawn;
+            attack.spawn_func = packed_entity::mo4a_projectile::spawn;
+            registry.emplace<MobAttackRanged>(entity);
             
-            auto& mob_attack_ranged = registry.emplace<MobAttackRanged>(entity); {
-                Projectile projectile; {
-                    projectile.damage = 10.f;
-                    projectile.lifetime = 6.f;
-                    projectile.source = entity;
-                    projectile.hit_soundbuffer = resourceloader.load<
-                        sf::SoundBuffer, sf::SoundBufferLoader
-                    >("res/audio/bulk.wav"); // sound_path
-                }
-                mob_attack_ranged.projectile = projectile;
-                mob_attack_ranged.atlas = resourceloader.load<sf::Texture, sf::TextureLoader
-                    >("res/textures/t_projectile/atlas.png");
-                mob_attack_ranged.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader
-                    >("res/textures/t_projectile/spritesheet.json");
-            }
             auto& hitbox = registry.emplace<Hitbox>(entity); {
                 hitbox.size = {16.f, 32.f};
                 hitbox.offset = {-hitbox.size.x / 2.f, -hitbox.size.y / 2.f};
@@ -130,10 +175,19 @@ namespace zobi {
                 Spritesheet::Resource, Spritesheet::Loader
                 >("res/textures/zloipacan/spritesheet.json"); // spritesheet path
             }
+
+            auto& healthbar = registry.emplace<HealthBar>(entity); {
+                healthbar.offset = sprite.offset + sf::Vector2f(-4.f, -6.f);
+                healthbar.size = {24.f, 3.5f};
+                healthbar.color = sf::Color::Black;
+                healthbar.color_empty = sf::Color::Red;
+                healthbar.color_full = sf::Color::Green;
+            }
         }
         
         return entity;
     }
 };
+
 
 }; // namespace packed_entity
