@@ -276,18 +276,36 @@ int main() {
     }
     
 
-    //Floor
-    //{auto floor = registry.create();
-    //    registry.emplace<Transform>(floor);
-    //    registry.emplace<Sprite>(floor, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/floor.png"));
-    //}
+    //Test (sex)
+    auto vector2_testing = registry.create(); {
+        registry.emplace<Transform>(vector2_testing);
+        registry.emplace<Vector2Testing>(vector2_testing);
+    }
+    
 
     // TileMap
     {auto entity = registry.create();
         registry.emplace<Transform>(entity);
+        //registry.emplace<GluedTo>(entity, vector2_testing); // teeest)))
         auto& tilemap = registry.emplace<TileMap>(entity); {
             tilemap.tileset = resourceloader.load<TileSet::Resource, TileSet::Loader>("res/tileset.json");
             tilemap.load_tiles("res/tilemap.json");
+        }
+    }
+
+    // t_fire 
+    {auto entity = registry.create();
+        auto& transform = registry.emplace<Transform>(entity); {
+            transform.position = { 128.f, 256.f };
+        }
+
+        auto& sprite = registry.emplace<Sprite>(entity,
+            resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/t_fire/atlas.png")
+        );
+        auto& sprite_animation = registry.emplace<SpriteAnimation>(entity,
+            resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/t_fire/spritesheet.json")
+        ); {
+            sprite_animation.play("idle");
         }
     }
 
@@ -332,6 +350,8 @@ int main() {
         mob_system(registry, delta_time);
         mob_spawner_system(registry, delta_time);
         
+        vector2_testing_system(registry, delta_time);
+
         movement_system(registry, delta_time);
         glue_system(registry);
         

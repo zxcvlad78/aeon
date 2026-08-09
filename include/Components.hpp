@@ -117,6 +117,15 @@ struct Camera {
     bool follow = true;
 };
 
+struct Vector2Testing {
+    float elapsed = 0.0f;
+    float amplitude_x = 10.f;
+    float amplitude_y = 10.f;
+    float frequency = 1.0f;
+    float phase = 0.0f;
+    sf::Vector2f base_position;
+    bool initialized = false;
+};
 
 struct ZIndex {
     int value = 0;

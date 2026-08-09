@@ -347,6 +347,26 @@ void projectile_system(entt::registry& registry, float dt) {
                         projectile1.time_elapsed = projectile1.lifetime;
                     }
                 }
+
+                if (registry.all_of<Projectile>(entity2)) {
+                    auto& projectile2 = registry.get<Projectile>(entity2);
+                    
+                    if (registry.all_of<Velocity>(entity2)) {
+                        auto& vel = registry.get<Velocity>(entity2);
+                        vel = {0.f, 0.f};
+                    }
+
+                    if (registry.all_of<SpriteAnimation>(entity2)) {
+                        auto& sprite_anim = registry.get<SpriteAnimation>(entity2);
+                        sprite_anim.play("death");
+                        if (sprite_anim.current_animation && !sprite_anim.current_animation->frames.empty()) {
+                            projectile2.time_elapsed = 0.f;
+                            projectile2.lifetime = sprite_anim.current_animation->frames.size() / sprite_anim.current_animation->fps;
+                        } else {
+                            projectile2.time_elapsed = projectile2.lifetime;
+                        }
+                    }
+                }
                 
                 soundplayer.play(projectile1.hit_soundbuffer, transform1.position);
                 break;
@@ -364,6 +384,21 @@ void projectile_system(entt::registry& registry, float dt) {
         }
     }
 
+}
+
+void vector2_testing_system(entt::registry& registry, float dt) {
+    auto view = registry.view<Vector2Testing, Transform>();
+    for (auto [entity, anim, transform] : view.each()) {
+        if (!anim.initialized) {
+            anim.base_position = transform.position;
+            anim.initialized = true;
+        }
+        anim.elapsed += dt;
+        float angle = 2.0f * 3.14159265f * anim.frequency * anim.elapsed + anim.phase;
+        float offset_x = anim.amplitude_x * std::sin(angle);
+        float offset_y = anim.amplitude_y * std::sin(angle);
+        transform.position = anim.base_position + sf::Vector2f{offset_x, offset_y};
+    }
 }
 
 void health_system(entt::registry& registry) {

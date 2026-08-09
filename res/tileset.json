@@ -1,23 +1,5 @@
 {
     "type": "TilesetResource",
     "tile_size": 16,
-    "texture_path": "res/textures/tilesets/tileset.png",
-    
-    "tiles":
-    {
-        "grass":
-        {
-        "x": 0, "y": 0
-        },
-        "bloody_grass":
-        {
-        "x": 1, "y": 0
-        },
-        "stone":
-        {
-        "x": 2, "y": 0
-        }
-    }
-
-
+    "texture_path": "res/textures/tilesets/tileset.png"
 }

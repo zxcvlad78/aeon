@@ -1,9 +1,9 @@
 #include "Systems.hpp"
 
 void render_tilemap(entt::registry& registry, sf::RenderWindow& window) {
-    auto view = registry.view<TileMap>();
+    auto view = registry.view<TileMap, Transform>();
 
-    for (auto [entity, tilemap] : view.each()) {
+    for (auto [entity, tilemap, transform] : view.each()) {
         if (!tilemap.tileset) continue;
         if (tilemap.tiles.empty()) continue;
 
@@ -27,8 +27,8 @@ void render_tilemap(entt::registry& registry, sf::RenderWindow& window) {
                 int width  = static_cast<int>(tile_size);
                 int height = static_cast<int>(tile_size);
 
-                sf::Vector2f pos(static_cast<float>(x * tile_size),
-                                 static_cast<float>(y * tile_size));
+                sf::Vector2f pos(static_cast<float>(x * tile_size) + transform.position.x,
+                                 static_cast<float>(y * tile_size) + transform.position.y);
 
                 unsigned int tri = index * 6;
 
