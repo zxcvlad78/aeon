@@ -14,7 +14,7 @@
 
     "buildPresets": [
         {
-            "name": "release",
+            "name": "vcpkg-default",
             "jobs": 10
         }
     ]

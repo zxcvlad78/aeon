@@ -1,0 +1,1 @@
+![Моё фото](images/screenshot.png)
