@@ -8,6 +8,8 @@
 #include "../utils/math.hpp"
 #include "../console/Console.hpp"
 
+#include "../utils/spatial_hashing.hpp"
+
 extern bool enable_render_system;
 
 void player_input_system(entt::registry& registry, sf::RenderWindow& window) {
@@ -95,7 +97,7 @@ void glue_system(entt::registry& registry) {
             continue;
         }
 
-        transform = target_transform;
+        transform.position = target_transform->position;
     }
 }
 
@@ -206,7 +208,6 @@ void sprite_system(entt::registry& registry, sf::RenderWindow& window) {
 
     static std::vector<Renderable> renderables;
     renderables.clear();
-    renderables.reserve(registry.view<Transform, Sprite>().size_hint());
 
     for (auto [entity, transform, sprite] : registry.view<Transform, Sprite>().each()) {
         if (sprite.center) {
@@ -257,7 +258,7 @@ void render_healthbar(entt::registry& registry, sf::RenderWindow& window) {
 
         sf::RectangleShape color_bar(sf::Vector2f(healthbar.size.x, healthbar.size.y));
         color_bar.setPosition(pos);
-        color_bar.setFillColor(healthbar.color);
+        color_bar.setFillColor(healthbar.color_empty);
         color_bar.setOutlineColor(healthbar.outline_color);
         color_bar.setOutlineThickness(healthbar.outline_thickness);
         window.draw(color_bar);
@@ -297,8 +298,19 @@ void render_system(entt::registry& registry, sf::RenderWindow& window) {
 
 
 void projectile_system(entt::registry& registry, float dt) {
-    auto view1 = registry.view<Transform, Projectile, Hitbox>();
+    const float CELL_SIZE = 64.0f;
+    SpatialHash spatial_hash(CELL_SIZE);
 
+    auto hitbox_view = registry.view<Transform, Hitbox>();
+    for (auto [entity, transform, hitbox] : hitbox_view.each()) {
+        sf::FloatRect aabb(
+            {transform.position.x + hitbox.offset.x, transform.position.y + hitbox.offset.y},
+            hitbox.size
+        );
+        spatial_hash.insert(entity, aabb);
+    }
+
+    auto view1 = registry.view<Transform, Projectile, Hitbox>();
     std::vector<entt::entity> to_destroy;
 
     for (auto [entity1, transform1, projectile1, hitbox1] : view1.each()) {
@@ -307,7 +319,7 @@ void projectile_system(entt::registry& registry, float dt) {
             to_destroy.push_back(entity1);
             continue;
         }
-        
+
         if (!collision_enabled) { continue; }
         if (projectile1.damaged_entity != entt::null) { continue; }
 
@@ -316,15 +328,19 @@ void projectile_system(entt::registry& registry, float dt) {
             hitbox1.size
         );
 
-        auto view2 = registry.view<Transform, Hitbox>();
-        for (auto [entity2, transform2, hitbox2] : view2.each()) {
-            if (projectile1.source == entity2 || entity1 == entity2) { continue; }
+        auto candidates = spatial_hash.query(aabb1);
+
+        for (auto entity2 : candidates) {
+            if (entity2 == entity1 || entity2 == projectile1.source) continue;
+
+            const auto* transform2 = registry.try_get<Transform>(entity2);
+            const auto* hitbox2 = registry.try_get<Hitbox>(entity2);
+            if (!transform2 || !hitbox2) continue;
 
             sf::FloatRect aabb2(
-                {transform2.position.x + hitbox2.offset.x, transform2.position.y + hitbox2.offset.y},
-                hitbox2.size
+                {transform2->position.x + hitbox2->offset.x, transform2->position.y + hitbox2->offset.y},
+                hitbox2->size
             );
-
 
             if (aabb1.findIntersection(aabb2).has_value()) {
                 projectile1.damaged_entity = entity2;
@@ -334,18 +350,18 @@ void projectile_system(entt::registry& registry, float dt) {
                     auto& health = registry.get<Health>(entity2);
                     health.apply_damage(projectile1.damage);
                 }
-                
+
                 if (registry.all_of<Velocity>(entity1)) {
                     auto& vel = registry.get<Velocity>(entity1);
                     vel = {0.f, 0.f};
                 }
-                
+
                 if (registry.all_of<SpriteAnimation>(entity1)) {
                     auto& sprite_anim = registry.get<SpriteAnimation>(entity1);
                     sprite_anim.play("death");
                     if (sprite_anim.current_animation && !sprite_anim.current_animation->frames.empty()) {
                         projectile1.time_elapsed = 0.f;
-                        projectile1.lifetime = sprite_anim.current_animation->frames.size() / sprite_anim.current_animation->fps;
+                        projectile1.lifetime = static_cast<float>(sprite_anim.current_animation->frames.size()) / sprite_anim.current_animation->fps;
                     } else {
                         projectile1.time_elapsed = projectile1.lifetime;
                     }
@@ -353,7 +369,7 @@ void projectile_system(entt::registry& registry, float dt) {
 
                 if (registry.all_of<Projectile>(entity2)) {
                     auto& projectile2 = registry.get<Projectile>(entity2);
-                    
+
                     if (registry.all_of<Velocity>(entity2)) {
                         auto& vel = registry.get<Velocity>(entity2);
                         vel = {0.f, 0.f};
@@ -364,29 +380,24 @@ void projectile_system(entt::registry& registry, float dt) {
                         sprite_anim.play("death");
                         if (sprite_anim.current_animation && !sprite_anim.current_animation->frames.empty()) {
                             projectile2.time_elapsed = 0.f;
-                            projectile2.lifetime = sprite_anim.current_animation->frames.size() / sprite_anim.current_animation->fps;
+                            projectile2.lifetime = static_cast<float>(sprite_anim.current_animation->frames.size()) / sprite_anim.current_animation->fps;
                         } else {
                             projectile2.time_elapsed = projectile2.lifetime;
                         }
                     }
                 }
-                
+
                 soundplayer.play(projectile1.hit_soundbuffer, transform1.position);
                 break;
             }
-        
         }
-        
     }
 
-    
-
     for (auto entity : to_destroy) {
-        if (registry.valid(entity)){
+        if (registry.valid(entity)) {
             registry.destroy(entity);
         }
     }
-
 }
 
 void vector2_testing_system(entt::registry& registry, float dt) {
