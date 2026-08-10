@@ -11,12 +11,13 @@
 
 #include "../packed_entity/general.h"
 
-void mob_system(entt::registry& registry, float dt) {
-    mob_movement_system(registry, dt);
-    mob_attack_ranged_system(registry, dt);
+void MobSystems::update(entt::registry& registry, float dt) {
+    if (!enabled) return;
+    movement(registry, dt);
+    attack_ranged(registry, dt);
 }
 
-void mob_movement_system(entt::registry& registry, float dt) {
+void MobSystems::movement(entt::registry& registry, float dt) {
     auto view_ranged = registry.view<MoveSpeed, Transform, Velocity, AIComponents::AITarget, Mob>();
     for (auto [entity, ms, transform, vel, ai_target] : view_ranged.each()) {
         if (ai_target.get_entity() == entt::null) {
@@ -41,12 +42,11 @@ void mob_movement_system(entt::registry& registry, float dt) {
             direction.x * ms.value,
             direction.y * ms.value
         };
-
     }
 }
 
 
-void mob_attack_ranged_system(entt::registry& registry, float dt) {
+void MobSystems::attack_ranged(entt::registry& registry, float dt) {
     auto view = registry.view<Mob, Transform, Attack, AIComponents::AITarget, MobAttackRanged>();
 
     for (auto [entity, transform, mob_attack, ai_target] : view.each()) {

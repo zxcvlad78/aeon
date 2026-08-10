@@ -6,4 +6,6 @@ namespace AISystems {
     void fixed_update(entt::registry& registry, float dt);
 
     void ai_target(entt::registry& registry, float dt);
+    
+    extern bool enabled;
 };

@@ -28,6 +28,8 @@
 
 bool debug_hitboxes = false;
 bool collision_enabled = true;
+bool AISystems::enabled = true;
+bool MobSystems::enabled = true;
 bool enable_render_system = true;
 
 float speed_scale = 1.0f;
@@ -94,6 +96,38 @@ int main() {
         },
         "Set render enabled",
         "render.enabled <value>"
+    );
+    Console::get_instance().register_command(
+        "ai.enabled",
+        [&window](const std::vector<std::string>& args) {
+            if (!args.empty()) {
+                try {
+                    int val = std::stoi(args[0]);
+                    AISystems::enabled = val > 0;
+                    Console::get_instance().print_success("AI enabled: " + std::to_string(AISystems::enabled));
+                } catch (const std::exception& e) {
+                    Console::get_instance().print_error(e.what());
+                }
+            }
+        },
+        "Set AI enabled",
+        "ai.enabled <value>"
+    );
+    Console::get_instance().register_command(
+        "mob.enabled",
+        [&window](const std::vector<std::string>& args) {
+            if (!args.empty()) {
+                try {
+                    int val = std::stoi(args[0]);
+                    MobSystems::enabled = val > 0;
+                    Console::get_instance().print_success("mob enabled: " + std::to_string(MobSystems::enabled));
+                } catch (const std::exception& e) {
+                    Console::get_instance().print_error(e.what());
+                }
+            }
+        },
+        "Set mob enabled",
+        "mob.enabled <value>"
     );
     Console::get_instance().register_command(
         "speed",
@@ -268,7 +302,7 @@ int main() {
         attack_system_manager_handler(registry, scaled_delta_time);
         
         AISystems::update(registry, scaled_delta_time);
-        mob_system(registry, scaled_delta_time);
+        MobSystems::update(registry, scaled_delta_time);
         MobSpawnerSystems::update(registry, scaled_delta_time);
         
         vector2_testing_system(registry, scaled_delta_time);

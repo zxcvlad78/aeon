@@ -3,6 +3,7 @@
 
 namespace AISystems {
     void update(entt::registry& registry, float dt) {
+        if (!enabled) return;
         ai_target(registry, dt);
     }
 

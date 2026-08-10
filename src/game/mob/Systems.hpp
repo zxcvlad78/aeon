@@ -1,10 +1,15 @@
 #include "../faction/Components.hpp"
 #include "Components.hpp"
 
-void mob_system(entt::registry& registry, float dt);
+namespace MobSystems {
+    void update(entt::registry& registry, float dt);
+    
+    void movement(entt::registry& registry, float dt);
+    void attack_ranged(entt::registry& registry, float dt);
 
-void mob_movement_system(entt::registry& registry, float dt);
-void mob_attack_ranged_system(entt::registry& registry, float dt);
+    extern bool enabled;
+}
+
 
 namespace MobFunc {
     std::vector<entt::entity> get_enemies(entt::registry& registry, entt::entity from);
