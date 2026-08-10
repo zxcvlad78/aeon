@@ -1,1 +1,2 @@
-![Моё фото](images/screenshot.png)
+![](images/screenshot1.png)
+![](images/screenshot.png)

@@ -199,47 +199,15 @@ int main() {
     sprite_animation.play("idle");
     }
 
-    {auto spawner = registry.create();
-        auto& z_index = registry.emplace<ZIndex>(spawner, 1);
-        auto& transform = registry.emplace<Transform>(spawner); {
-            transform.position.x = 144.f;
-            transform.position.y = 112.f;
-        }
-        auto& mob_spawner = registry.emplace<MobSpawner>(spawner); {
-            mob_spawner.spawn_func = packed_entity::zobi::spawn;
-            mob_spawner.cooldown = 5.5f;
-            mob_spawner.spawn_range = sf::Vector2(450.f, 450.f);
-            mob_spawner.spawn_soundbuffer = resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/wither-spawn.mp3");
-        }
-    
-    
-        registry.emplace<Sprite>(spawner, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/spawner/atlas.png"));
-        registry.emplace<SpriteAnimation>(
-            spawner,
-            resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/spawner/spritesheet.json")).play("idle");
-    
-    }
+    auto spawner_1 = packed_entity::mob_spawner::spawn(
+        registry,
+        packed_entity::zobi::spawn
+    );
 
-    {auto spawner = registry.create();
-        auto& z_index = registry.emplace<ZIndex>(spawner, 1);
-        auto& transform = registry.emplace<Transform>(spawner); {
-            transform.position.x = 128.f;
-            transform.position.y = 96.f;
-        }
-        auto& mob_spawner = registry.emplace<MobSpawner>(spawner); {
-            mob_spawner.spawn_func = packed_entity::gad::spawn;
-            mob_spawner.cooldown = 5.f;
-            mob_spawner.spawn_range = sf::Vector2(-450.f, 450.f);
-            mob_spawner.spawn_soundbuffer = resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/creeper-death.mp3");
-        }
-    
-    
-        registry.emplace<Sprite>(spawner, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/spawner/atlas.png"));
-        registry.emplace<SpriteAnimation>(
-            spawner,
-            resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/spawner/spritesheet.json")).play("idle");
-    
-    }
+    auto spawner_2 = packed_entity::mob_spawner::spawn(
+        registry,
+        packed_entity::gad::spawn
+    );
     
 
     //Test (sex)

@@ -3,6 +3,7 @@
 #include "../../../include/Components.hpp"
 #include "../mob/Components.hpp"
 #include "../faction/Components.hpp"
+#include "../mob_spawner/Components.hpp"
 #include "../ai/Components.hpp"
 #include "../../ResourceLoader.hpp"
 
@@ -189,5 +190,29 @@ namespace zobi {
     }
 };
 
+namespace mob_spawner {
+    inline entt::entity spawn(entt::registry& registry, std::function<entt::entity(entt::registry&)> func = nullptr) {
+        auto entity = registry.create();
+        registry.emplace<ZIndex>(entity, 1);
+        auto& transform = registry.emplace<Transform>(entity);
+        auto& mob_spawner = registry.emplace<MobSpawner>(entity); {
+            mob_spawner.spawn_func = func;
+            mob_spawner.spawn_interval = 0.5f;
+            mob_spawner.spawn_range = sf::Vector2(-450.f, 450.f);
+            mob_spawner.spawn_soundbuffer = resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/wither-spawn.mp3");
+        }
+    
+    
+        registry.emplace<Sprite>(entity, resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/spawner/atlas.png"));
+        auto& sprite_anim = registry.emplace<SpriteAnimation>(
+            entity,
+            resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/spawner/spritesheet.json")
+        ); {
+            sprite_anim.play("idle");
+        }
+            
+        return entity;
+    }
+}
 
 }; // namespace packed_entity

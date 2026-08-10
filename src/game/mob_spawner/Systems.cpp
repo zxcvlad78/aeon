@@ -25,11 +25,8 @@ void MobSpawnerSystems::update(entt::registry& registry, float dt) {
 void MobSpawnerSystems::process_events(entt::registry& registry) {
     auto view = registry.view<MobSpawner, MobSpawnerSpawnEvent, Transform>();
 
-    //std::vector<MobSpawnerSpawnEvent> to_delete;
-
     for (auto [entity, mob_spawner, event, transform] : view.each()) {
         mob_spawner.cooldown = mob_spawner.spawn_interval;
-        //to_delete.push_back(event);
 
         if (auto* s_a = registry.try_get<SpriteAnimation>(entity)) {
             s_a->play("spawn", "idle");
