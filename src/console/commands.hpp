@@ -98,7 +98,7 @@ namespace ConsoleCommands {
                         float val = std::stof(args[0]);
                         if (val >= 0.f) {
                             Singleton::Variables::speed_scale = val;
-                            Console::get_instance().print_success("Speed scale set to: " + std::to_string(Singleton::Variables::speed_scale));
+                            Console::get_instance().print_success("Speed scale set to: " + std::to_string(val));
                         } else {
                             Console::get_instance().print_error("Speed scale must be positive");
                         }

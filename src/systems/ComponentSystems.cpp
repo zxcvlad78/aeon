@@ -165,10 +165,88 @@ void render_healthbar(entt::registry& registry, sf::RenderWindow& window) {
     }
 }
 
+void explosion_sus(entt::registry& registry, float dt) {
+    const float CELL_SIZE = 64.0f;
+    SpatialHash spatial_hash(CELL_SIZE);
 
+    auto target_view = registry.view<Transform, Hitbox, Health>();
+    for (auto [entity, transform, hitbox, health] : target_view.each()) {
+        spatial_hash.insert(entity, transform.position, hitbox);
+    }
+
+    auto view = registry.view<Transform, Explosion>();
+    std::vector<entt::entity> explosions_to_remove;
+    for (auto [entity, transform, explosion] : view.each()) {
+        if (explosion.time_elapsed == 0.0f)  {
+            soundplayer.play(explosion.soundbuffer);
+        }
+
+        explosion.time_elapsed += dt;
+        if (explosion.time_elapsed >= explosion.lifetime) {
+            explosions_to_remove.push_back(entity);
+            continue;
+        }
+
+        if (!collision_enabled) continue;
+
+        sf::FloatRect query_aabb;
+        query_aabb.position = {transform.position.x - explosion.radius, transform.position.y - explosion.radius};
+        query_aabb.size = {explosion.radius * 2.0f, explosion.radius * 2.0f};
+
+        auto candidates = spatial_hash.query(query_aabb);
+
+        printf("Candidates %u\n", candidates.size());
+
+        for (auto target_entity : candidates) {
+            if (explosion.damaged_entities.find(target_entity) != explosion.damaged_entities.end())
+                continue;
+            
+            const auto* target_transform = registry.try_get<Transform>(target_entity);
+            const auto* target_hitbox = registry.try_get<Hitbox>(target_entity);
+            auto* target_health = registry.try_get<Health>(target_entity);
+            if (!target_transform || !target_hitbox || !target_health) continue;
+
+            bool hit = false;
+            sf::Vector2f explosion_center = transform.position;
+
+            if (target_hitbox->radius > 0.0f) {
+                sf::Vector2f target_center = target_transform->position + target_hitbox->offset;
+                float dx = explosion_center.x - target_center.x;
+                float dy = explosion_center.y - target_center.y;
+                float dist_sq = dx*dx + dy*dy;
+                float radius_sum = explosion.radius + target_hitbox->radius;
+                hit = (dist_sq <= radius_sum * radius_sum);
+            } else {
+                sf::FloatRect rect;
+                rect.position = {target_transform->position.x + target_hitbox->offset.x,
+                                target_transform->position.y + target_hitbox->offset.y};
+                rect.size = target_hitbox->size;
+
+                float closest_x = std::max(rect.position.x, std::min(explosion_center.x, rect.position.x + rect.size.x));
+                float closest_y = std::max(rect.position.y, std::min(explosion_center.y, rect.position.y + rect.size.y));
+                float dx = explosion_center.x - closest_x;
+                float dy = explosion_center.y - closest_y;
+                hit = (dx*dx + dy*dy) <= (explosion.radius * explosion.radius);
+            }
+            
+
+            if (hit) {
+                printf("Hit %u\n", candidates.size());
+                target_health->apply_damage(explosion.damage);
+                explosion.damaged_entities.insert(target_entity);
+            }
+        }
+    }
+
+    for (auto entity : explosions_to_remove) {
+        if (registry.valid(entity)) {
+            registry.destroy(entity);
+        }
+    }
+}
 
 void projectile_system(entt::registry& registry, float dt) {
-    const float CELL_SIZE = 64.0f;
+    static const float CELL_SIZE = 64.0f;
     SpatialHash spatial_hash(CELL_SIZE);
 
     auto hitbox_view = registry.view<Transform, Hitbox>();
@@ -239,6 +317,11 @@ void projectile_system(entt::registry& registry, float dt) {
 
                 if (registry.all_of<Projectile>(entity2)) {
                     auto& projectile2 = registry.get<Projectile>(entity2);
+
+                    if (registry.all_of<Hitbox>(entity2)) {
+                        auto& hbox = registry.get<Hitbox>(entity2);
+                        hbox.size = {0.f, 0.f};
+                    }
 
                     if (registry.all_of<Velocity>(entity2)) {
                         auto& vel = registry.get<Velocity>(entity2);

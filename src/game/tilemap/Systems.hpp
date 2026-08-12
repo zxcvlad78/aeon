@@ -1,3 +1,6 @@
 #include "Components.hpp"
 
-void render_tilemap(entt::registry& registry, sf::RenderWindow& window);
+namespace TileMapSystems {
+    void update(entt::registry& registry, sf::RenderWindow& window);
+    void render(entt::registry& registry, sf::RenderWindow& window);
+}

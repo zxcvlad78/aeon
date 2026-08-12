@@ -182,6 +182,10 @@ int main() {
                 if (code == sf::Keyboard::Key::F6) {
                     RenderSystems::draw_hitboxes_enabled = !RenderSystems::draw_hitboxes_enabled;
                 }
+
+                if (code == sf::Keyboard::Key::F7) {
+                    packed_entity::explosion::spawn(registry);
+                }
             }
             
             Console::get_instance().handle_event(*event, window);
@@ -191,7 +195,6 @@ int main() {
         float delta_time = elapsed.asSeconds();
         float scaled_delta_time = delta_time * Singleton::Variables::speed_scale;
 
-        health_system(registry);
         attack_system_manager_handler(registry, scaled_delta_time);
         
         AISystems::update(registry, scaled_delta_time);
@@ -202,10 +205,12 @@ int main() {
 
         movement_system(registry, scaled_delta_time);
         glue_system(registry);
-        
+        explosion_sus(registry, scaled_delta_time);
+
         CameraSystems::update(registry, window, scaled_delta_time);
 
         projectile_system(registry, scaled_delta_time);
+        health_system(registry);
         
         sprite_animation_control_system(registry);
         SpriteSystems::update(registry, window, scaled_delta_time);
@@ -214,9 +219,9 @@ int main() {
 
         window.clear(sf::Color::Black);
 
-        render_tilemap(registry, window);
+        TileMapSystems::update(registry, window);
         RenderSystems::update(registry, window);
-        
+
         window.setView(window.getDefaultView()); 
         
         ui_render_system(registry, window);

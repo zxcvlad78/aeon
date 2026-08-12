@@ -1,6 +1,12 @@
 #include "Systems.hpp"
 
-void render_tilemap(entt::registry& registry, sf::RenderWindow& window) {
+namespace TileMapSystems {
+
+void update(entt::registry& registry, sf::RenderWindow& window) {
+    render(registry, window);
+}
+
+void render(entt::registry& registry, sf::RenderWindow& window) {
     auto view = registry.view<TileMap, Transform>();
 
     for (auto [entity, tilemap, transform] : view.each()) {
@@ -63,3 +69,5 @@ void render_tilemap(entt::registry& registry, sf::RenderWindow& window) {
         window.draw(vertices, states);
     }
 }
+
+} // namespace TileMapSystems

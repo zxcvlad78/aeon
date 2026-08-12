@@ -8,6 +8,32 @@
 namespace packed_entity {
 
 
+namespace explosion {
+    inline ::entt::entity spawn(::entt::registry& registry) {
+        auto entity = registry.create();
+        registry.emplace<Transform>(entity);
+
+        auto sprite = registry.emplace<Sprite>(entity,
+            resourceloader.load<
+                sf::Texture,
+                sf::TextureLoader
+            >("res/textures/explosion/spritesheet.png")
+        );
+        auto exp = registry.emplace<Explosion>(entity); {
+            exp.damage = 999.0f;
+            exp.radius = 1200.0f;
+            exp.soundbuffer = resourceloader.load<
+                sf::SoundBuffer,
+                sf::SoundBufferLoader
+            >("res/audio/explosion.mp3");
+
+
+        }
+
+        return entity;
+    }
+}
+
 namespace default_projectile {
     inline ::entt::entity spawn(::entt::registry& registry, ::entt::entity source = ::entt::null) {
         ::entt::entity entity = registry.create();

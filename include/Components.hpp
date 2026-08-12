@@ -3,6 +3,7 @@
 #include "Resources.hpp"
 
 #include <functional>
+#include <unordered_set>
 
 struct Transform {
     sf::Vector2f position;
@@ -85,6 +86,7 @@ public:
 struct Hitbox {
     sf::Vector2f size;
     sf::Vector2f offset;
+    float radius = 0.0f;
     //bool center = false;
 };
 
@@ -122,6 +124,17 @@ struct Vector2Testing {
 
 struct PlayerInput {
     bool is_current = true;
+};
+
+struct Explosion {
+    float radius = 1.0f;
+    float damage = 50.0f;
+    float lifetime = 1.0f;
+
+    entt::resource<sf::SoundBuffer> soundbuffer;
+
+    float time_elapsed = 0.0f;
+    std::unordered_set<entt::entity> damaged_entities;
 };
 
 struct SpriteAnimationControl {

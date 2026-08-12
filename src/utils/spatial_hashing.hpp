@@ -42,6 +42,28 @@ public:
         }
     }
 
+    void insert(Entity entity, const sf::Vector2f& center, float radius) {
+        sf::FloatRect aabb;
+        aabb.position = {center.x - radius, center.y - radius};
+        aabb.size = {radius * 2.f, radius * 2.f};
+        insert(entity, aabb);
+    }
+
+    void insert(Entity entity, const sf::Vector2f& position, const Hitbox& hitbox) {
+        if (hitbox.radius > 0.f) {
+            sf::Vector2f center = position + hitbox.offset;
+            sf::FloatRect aabb;
+            aabb.position = {center.x - hitbox.radius, center.y - hitbox.radius};
+            aabb.size = {hitbox.radius * 2.f, hitbox.radius * 2.f};
+            insert(entity, aabb);
+        } else {
+            sf::FloatRect aabb;
+            aabb.position = {position.x + hitbox.offset.x, position.y + hitbox.offset.y};
+            aabb.size = hitbox.size;
+            insert(entity, aabb);
+        }
+    }
+
     std::vector<Entity> query(const sf::FloatRect& aabb) const {
         float left   = aabb.position.x;
         float top    = aabb.position.y;

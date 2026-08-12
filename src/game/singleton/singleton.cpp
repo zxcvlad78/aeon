@@ -7,6 +7,6 @@
 namespace Singleton {
     namespace Variables {
         sf::Font main_font;
-        bool speed_scale = 1.0f;
+        float speed_scale = 4.0f;
     }
 }
