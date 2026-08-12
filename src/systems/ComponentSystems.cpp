@@ -8,6 +8,7 @@
 #include "../utils/math.hpp"
 #include "../console/Console.hpp"
 
+#include "../game/sprite/Components.hpp"
 #include "../utils/spatial_hashing.hpp"
 
 extern bool enable_render_system;
@@ -111,32 +112,6 @@ void movement_system(entt::registry& registry, float dt) {
     }
 }
 
-void camera_system(entt::registry& registry, sf::RenderWindow& window, float dt) {
-    auto view = registry.view<Transform, Camera>();
-
-    for (auto [entity, transform, camera] : view.each()) {
-        sf::Vector2f current_center = camera.view.getCenter();
-        sf::Vector2f target_center = {transform.position.x, transform.position.y};
-        sf::Vector2f lex = target_center;
-
-        if (camera.smooth) {
-            lex.x = current_center.x + (target_center.x - current_center.x) * 5.0f * dt;
-            lex.y = current_center.y + (target_center.y - current_center.y) * 5.0f * dt;
-        }
-
-
-        camera.view.setCenter(lex);
-        sf::Listener::setPosition({lex.x, lex.y, 0.f});
-    }
-
-    auto camera_view = registry.view<Camera>();
-    if (!camera_view.empty()) {
-        auto camera_entity = camera_view.front();
-        auto& cam = camera_view.get<Camera>(camera_entity);
-        window.setView(cam.view);
-    }
-}
-
 void sprite_animation_control_system(entt::registry& registry) {
     auto view = registry.view<SpriteAnimation, SpriteAnimationControl, Velocity>();
     
@@ -161,94 +136,6 @@ void sprite_animation_control_system(entt::registry& registry) {
     }
 }
 
-void sprite_animation_system(entt::registry& registry, float dt) {
-    auto view = registry.view<SpriteAnimation, Sprite>();
-   
-    for (auto [entity, sprite_anim, sprite] : view.each()) {
-        if (!sprite_anim.is_playing || !sprite_anim.current_animation || sprite_anim.current_animation->frames.empty()) {
-            continue;
-        }
-        
-        sprite_anim.time_accumulator += dt;
-        float frame_duration = 1.0f / sprite_anim.current_animation->fps;
-
-        while (sprite_anim.time_accumulator >= frame_duration) {
-            sprite_anim.time_accumulator -= frame_duration;
-            size_t next_frame = sprite_anim.current_frame_idx + 1;
-
-            if (next_frame >= sprite_anim.current_animation->frames.size()) {
-                if (sprite_anim.current_animation->is_looping) {
-                    sprite_anim.current_frame_idx = 0;
-                } else {
-                    if (sprite_anim.next_anim.empty()) {
-                        sprite_anim.is_playing = false;
-                    } else sprite_anim.play(sprite_anim.next_anim);
-
-                    break;
-                }
-            } else {
-                sprite_anim.current_frame_idx = next_frame;
-            }
-        }
-
-        const FrameData& frame = sprite_anim.current_animation->frames[sprite_anim.current_frame_idx];
-        sprite.sprite.setTextureRect(sf::IntRect({frame.x, frame.y}, {frame.w, frame.h}));
-    }
-}
-
-void sprite_system(entt::registry& registry, sf::RenderWindow& window) {
-    struct Renderable {
-        sf::Sprite* sprite;
-        sf::Vector2f position;
-        sf::Vector2f offset;
-        sf::Angle rotation;
-        sf::Vector2f scale;
-        int z_index;
-    };
-
-    static std::vector<Renderable> renderables;
-    renderables.clear();
-
-    for (auto [entity, transform, sprite] : registry.view<Transform, Sprite>().each()) {
-        if (sprite.center) {
-            auto tex_rect = sprite.sprite.getTextureRect();
-            sprite.offset = {
-                -static_cast<float>(tex_rect.size.x) / 2.f,
-                -static_cast<float>(tex_rect.size.y) / 2.f
-            };
-        }
-
-        int z_index = 0;
-        
-        if (registry.all_of<ZIndex>(entity)) {
-            z_index = registry.get<ZIndex>(entity).value;
-        }
-
-        Renderable renderable;
-        renderable.sprite = &sprite.sprite;
-        renderable.position = transform.position;
-        renderable.offset = sprite.offset;
-        renderable.rotation = transform.rotation_degrees;
-        renderable.scale = transform.scale;
-        renderable.z_index = z_index;
-
-        renderables.push_back(renderable);
-    }
-
-    std::sort(renderables.begin(), renderables.end(), 
-        [](const Renderable& a, const Renderable& b) {
-            return a.z_index < b.z_index;
-        });
-
-    for (const auto& renderable : renderables) {
-        sf::Vector2f pos = renderable.position + renderable.offset;
-        renderable.sprite->setPosition({pos.x, pos.y});
-        renderable.sprite->setRotation({renderable.rotation});
-        renderable.sprite->setScale({renderable.scale.x, renderable.scale.y});
-        
-        window.draw(*renderable.sprite);
-    }
-}
 
 void render_healthbar(entt::registry& registry, sf::RenderWindow& window) {
     auto view = registry.view<HealthBar, Transform, Health>();
@@ -278,23 +165,6 @@ void render_healthbar(entt::registry& registry, sf::RenderWindow& window) {
     }
 }
 
-void render_system(entt::registry& registry, sf::RenderWindow& window) {
-    if (!enable_render_system) return;
-    
-    sprite_system(registry, window);
-    render_healthbar(registry, window);
-
-    if (debug_hitboxes) {
-        for (auto [entity, transform, hitbox] : registry.view<Transform, Hitbox>().each()) {
-            sf::Vector2f pos = transform.position + hitbox.offset;
-    
-            sf::RectangleShape color_bar(hitbox.size);
-            color_bar.setPosition(pos);
-            color_bar.setFillColor(sf::Color(255, 0, 0, 126.f));
-            window.draw(color_bar);
-        }
-    }
-}
 
 
 void projectile_system(entt::registry& registry, float dt) {

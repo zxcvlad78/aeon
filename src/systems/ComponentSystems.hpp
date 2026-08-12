@@ -6,20 +6,15 @@ class ResourceLoader;
 void glue_system(entt::registry& registry);
 void player_input_system(entt::registry& registry, sf::RenderWindow& window);
 void movement_system(entt::registry& registry, float dt);
-void camera_system(entt::registry& registry, sf::RenderWindow& window, float dt);
 void vector2_testing_system(entt::registry& registry, float dt);
 
 void sprite_animation_control_system(entt::registry& registry);
-void sprite_animation_system(entt::registry& registry, float dt);
 
 void attack_system_manager_handler(entt::registry& registry, float dt);
 
 void projectile_system(entt::registry& registry, float dt);
-void sprite_system(entt::registry& registry);
-void render_system(entt::registry& registry, sf::RenderWindow& window);
 void render_healthbar(entt::registry& registry, sf::RenderWindow& window);
 
 void health_system(entt::registry& registry);
 
-extern bool debug_hitboxes;
 extern bool collision_enabled;

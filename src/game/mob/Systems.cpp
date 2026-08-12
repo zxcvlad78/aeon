@@ -84,10 +84,7 @@ void MobSystems::attack_ranged(entt::registry& registry, float dt) {
             
             if (auto* projectile = registry.try_get<Projectile>(projectile_entity)) {
                 if (auto* v = registry.try_get<Velocity>(projectile_entity)) {
-                    float distance = std::hypot(enemy_transform->position.x - transform.position.x, enemy_transform->position.y - transform.position.y);
-                    float travel_time = distance;
-                    sf::Vector2f predicted_enemy_pos = enemy_transform->position + enemy_velocity * travel_time;
-                    sf::Vector2f dir = Math::get_direction(transform.position, predicted_enemy_pos);
+                    sf::Vector2f dir = Math::get_direction(transform.position, enemy_transform->position);
                     v->x = projectile->speed * dir.x;
                     v->y = projectile->speed * dir.y;
                 }

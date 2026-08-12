@@ -2,8 +2,13 @@
 
 #include "../../utils/rng.hpp"
 #include "../../SoundPlayer.hpp"
+#include "Components.hpp"
+#include <Components.hpp>
+#include "../sprite/Components.hpp"
 
 void MobSpawnerSystems::update(entt::registry& registry, float dt) {
+    if (!enabled) return;
+
     auto view = registry.view<MobSpawner>();
 
     for (auto [entity, mob_spawner] : view.each()) {

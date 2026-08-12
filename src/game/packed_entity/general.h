@@ -1,20 +1,16 @@
 #pragma once
 
-#include "../../../include/Components.hpp"
-#include "../mob/Components.hpp"
-#include "../faction/Components.hpp"
-#include "../mob_spawner/Components.hpp"
-#include "../ai/Components.hpp"
+#include <Aeon.hpp>
 #include "../../ResourceLoader.hpp"
-
+#include "../singleton/singleton.hpp"
 #include "../../utils/rng.hpp"
 
 namespace packed_entity {
 
 
 namespace default_projectile {
-    inline entt::entity spawn(entt::registry& registry, entt::entity source = entt::null) {
-        entt::entity entity = registry.create();
+    inline ::entt::entity spawn(::entt::registry& registry, ::entt::entity source = ::entt::null) {
+        ::entt::entity entity = registry.create();
         auto& z_index = registry.emplace<ZIndex>(entity, 2);
         auto& projectile = registry.emplace<Projectile>(entity); {
             projectile.source = source;
@@ -49,7 +45,7 @@ namespace default_projectile {
 }
 
 namespace mo4a_projectile {
-    inline entt::entity spawn(entt::registry& registry, entt::entity source = entt::null) {
+    inline ::entt::entity spawn(::entt::registry& registry, ::entt::entity source = ::entt::null) {
         auto entity = packed_entity::default_projectile::spawn(registry, source);
         if (auto* sprite = registry.try_get<Sprite>(entity)) {
             sprite->sprite.setTexture(
@@ -64,14 +60,14 @@ namespace mo4a_projectile {
 }
 
 namespace sprite_animation_entity {
-    inline entt::entity spawn(
-        entt::registry& registry,
+    inline ::entt::entity spawn(
+        ::entt::registry& registry,
         const std::string& sprite_path,
         const std::string& sheet_path,
         const std::string& anim_name = "default"
     ) {
         
-        entt::entity entity = registry.create(); {
+        ::entt::entity entity = registry.create(); {
             auto& transform = registry.emplace<Transform>(entity);
 
             auto& sprite = registry.emplace<Sprite>(entity,
@@ -89,7 +85,7 @@ namespace sprite_animation_entity {
 };
 
 namespace twotaunt {
-    inline entt::entity spawn(entt::registry& registry, float multiplier = 1.f) {
+    inline ::entt::entity spawn(::entt::registry& registry, float multiplier = 1.f) {
         auto enitity = packed_entity::sprite_animation_entity::spawn(registry,
             "res/textures/cmex/2taunt.png", "res/textures/cmex/spritesheet.json", "default"
         ); if (auto* t = registry.try_get<Transform>(enitity)) {
@@ -105,8 +101,8 @@ namespace twotaunt {
 };
 
 namespace gad {
-    inline entt::entity spawn(entt::registry& registry) {
-        entt::entity entity = registry.create(); {
+    inline ::entt::entity spawn(::entt::registry& registry) {
+        ::entt::entity entity = registry.create(); {
             registry.emplace<Mob>(entity);
             auto& z_index = registry.emplace<ZIndex>(entity, 1);
             auto& transform = registry.emplace<Transform>(entity);
@@ -139,8 +135,8 @@ namespace gad {
 };
 
 namespace zobi {
-    inline entt::entity spawn(entt::registry& registry) {
-        entt::entity entity = registry.create(); {
+    inline ::entt::entity spawn(::entt::registry& registry) {
+        ::entt::entity entity = registry.create(); {
             registry.emplace<Mob>(entity);
             auto& z_index = registry.emplace<ZIndex>(entity, 1);
             auto& transform = registry.emplace<Transform>(entity);
@@ -191,13 +187,13 @@ namespace zobi {
 };
 
 namespace mob_spawner {
-    inline entt::entity spawn(entt::registry& registry, std::function<entt::entity(entt::registry&)> func = nullptr) {
+    inline ::entt::entity spawn(::entt::registry& registry, std::function<::entt::entity(::entt::registry&)> func = nullptr) {
         auto entity = registry.create();
         registry.emplace<ZIndex>(entity, 1);
         auto& transform = registry.emplace<Transform>(entity);
         auto& mob_spawner = registry.emplace<MobSpawner>(entity); {
             mob_spawner.spawn_func = func;
-            mob_spawner.spawn_interval = 0.5f;
+            mob_spawner.spawn_interval = 5.5f;
             mob_spawner.spawn_range = sf::Vector2(-450.f, 450.f);
             mob_spawner.spawn_soundbuffer = resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>("res/audio/wither-spawn.mp3");
         }
@@ -211,6 +207,61 @@ namespace mob_spawner {
             sprite_anim.play("idle");
         }
             
+        return entity;
+    }
+}
+
+namespace player {
+    inline ::entt::entity spawn(::entt::registry& registry) {
+        auto entity = registry.create();
+        registry.emplace<ZIndex>(entity, 1);
+        registry.emplace<Transform>(entity).position = {50.f , 50.f};
+        registry.emplace<Velocity>(entity, 0.f, 0.f, true);
+        registry.emplace<SpriteAnimationControl>(entity);
+        registry.emplace<PlayerInput>(entity);
+        
+        auto& attack = registry.emplace<Attack>(entity); {
+            attack.spawn_func = packed_entity::default_projectile::spawn;
+            attack.interval = 0.2f; 
+        }
+        
+        registry.emplace<Faction>(entity, "player");
+        registry.emplace<Health>(entity, 100.f, 100.f);
+        registry.emplace<MoveSpeed>(entity, 100.0f);
+        
+        Hitbox player_hitbox;
+            player_hitbox.size = {16.f, 32.f};
+            player_hitbox.offset = {-player_hitbox.size.x / 2.f, -player_hitbox.size.y / 2.f};
+            registry.emplace<Hitbox>(entity, player_hitbox);
+    
+        Sprite sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/vlad/atlas.png"));
+            sprite.offset = {-8.f, -16.f};
+            registry.emplace<Sprite>(entity, sprite);
+    
+        SpriteAnimation sprite_anim;
+            sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/vlad/spritesheet.json");
+            registry.emplace<SpriteAnimation>(entity, sprite_anim);
+    
+        HealthBar healthbar;
+            healthbar.offset = sprite.offset + sf::Vector2f(-4.f, -6.f);
+            healthbar.size = {24.f, 3.5f};
+            healthbar.color = sf::Color::Black;
+            healthbar.color_empty = sf::Color::Red;
+            healthbar.color_full = sf::Color::Green;
+         
+            registry.emplace<HealthBar>(entity, healthbar);
+    
+        Camera player_camera;
+            player_camera.view = sf::View(
+                    {0.f, 0.f},
+                    {
+                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.x) / 3.0f,
+                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.y) / 3.0f
+                    }
+                );
+                 
+            registry.emplace<Camera>(entity, player_camera);
+        
         return entity;
     }
 }

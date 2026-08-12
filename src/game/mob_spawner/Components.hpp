@@ -1,7 +1,6 @@
 #pragma once
-
-#include "../../../include/Components.hpp"
 #include "../../ResourceLoader.hpp"
+#include <entt/entt.hpp>
 
 struct MobSpawner {
     std::function<entt::entity(entt::registry&)> spawn_func;

@@ -1,5 +1,6 @@
 #pragma once
-#include "../../../include/Components.hpp"
+
+#include <Components.hpp>
 #include "../../ResourceLoader.hpp"
 
 struct Mob {  };

@@ -1,5 +1,7 @@
-#include "../faction/Components.hpp"
+#pragma once
+
 #include "Components.hpp"
+#include "../faction/Components.hpp"
 
 namespace MobSystems {
     void update(entt::registry& registry, float dt);

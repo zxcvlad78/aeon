@@ -8,15 +8,7 @@
 #include "systems/ComponentSystems.hpp"
 #include "systems/UIComponentSystems.hpp"
 
-#include "game/mob/Systems.hpp"
-#include "game/ai/Systems.hpp"
-
-#include "game/mob_spawner/Components.hpp"
-#include "game/mob_spawner/Systems.hpp"
-
-
-#include "game/tilemap/Components.hpp"
-#include "game/tilemap/Systems.hpp"
+#include <Aeon.hpp>
 
 #include "utils/DebugText.hpp"
 #include "utils/math.hpp"
@@ -25,12 +17,14 @@
 #include "utils/rng.hpp"
 
 #include "console/Console.hpp"
+#include "console/commands.hpp"
 
-bool debug_hitboxes = false;
 bool collision_enabled = true;
 bool AISystems::enabled = true;
 bool MobSystems::enabled = true;
-bool enable_render_system = true;
+bool MobSpawnerSystems::enabled = true;
+bool RenderSystems::enabled = true;
+bool RenderSystems::draw_hitboxes_enabled = false;
 
 float speed_scale = 1.0f;
 
@@ -50,108 +44,7 @@ int main() {
     }
 
     Console::get_instance().init(Singleton::Variables::main_font, 16);
-    Console::get_instance().register_command(
-        "fps_max",
-        [&window](const std::vector<std::string>& args) {
-            if (!args.empty()) {
-                try {
-                    int fps = std::stoi(args[0]);
-                    window.setFramerateLimit(fps);
-                } catch (const std::exception& e) {
-                    Console::get_instance().print_error(e.what());
-                }
-            }
-        },
-        "Set target framerate",
-        "fps_max <value>"
-    );
-    Console::get_instance().register_command(
-        "collision.enabled",
-        [&window](const std::vector<std::string>& args) {
-            if (!args.empty()) {
-                try {
-                    int val = std::stoi(args[0]);
-                    collision_enabled = val > 0;
-                    Console::get_instance().print_success("Collision enabled: " + collision_enabled);
-                } catch (const std::exception& e) {
-                    Console::get_instance().print_error(e.what());
-                }
-            }
-        },
-        "Set collision enabled",
-        "collision.enabled <value>"
-    );
-    Console::get_instance().register_command(
-        "render.enabled",
-        [&window](const std::vector<std::string>& args) {
-            if (!args.empty()) {
-                try {
-                    int val = std::stoi(args[0]);
-                    enable_render_system = val > 0;
-                    Console::get_instance().print_success("Render enabled: " + std::to_string(enable_render_system));
-                } catch (const std::exception& e) {
-                    Console::get_instance().print_error(e.what());
-                }
-            }
-        },
-        "Set render enabled",
-        "render.enabled <value>"
-    );
-    Console::get_instance().register_command(
-        "ai.enabled",
-        [&window](const std::vector<std::string>& args) {
-            if (!args.empty()) {
-                try {
-                    int val = std::stoi(args[0]);
-                    AISystems::enabled = val > 0;
-                    Console::get_instance().print_success("AI enabled: " + std::to_string(AISystems::enabled));
-                } catch (const std::exception& e) {
-                    Console::get_instance().print_error(e.what());
-                }
-            }
-        },
-        "Set AI enabled",
-        "ai.enabled <value>"
-    );
-    Console::get_instance().register_command(
-        "mob.enabled",
-        [&window](const std::vector<std::string>& args) {
-            if (!args.empty()) {
-                try {
-                    int val = std::stoi(args[0]);
-                    MobSystems::enabled = val > 0;
-                    Console::get_instance().print_success("mob enabled: " + std::to_string(MobSystems::enabled));
-                } catch (const std::exception& e) {
-                    Console::get_instance().print_error(e.what());
-                }
-            }
-        },
-        "Set mob enabled",
-        "mob.enabled <value>"
-    );
-    Console::get_instance().register_command(
-        "speed",
-        [](const std::vector<std::string>& args) {
-            if (!args.empty()) {
-                try {
-                    float val = std::stof(args[0]);
-                    if (val >= 0.f) {
-                        speed_scale = val;
-                        Console::get_instance().print_success("Speed scale set to: " + std::to_string(speed_scale));
-                    } else {
-                        Console::get_instance().print_error("Speed scale must be positive");
-                    }
-                } catch (const std::exception& e) {
-                    Console::get_instance().print_error(e.what());
-                }
-            } else {
-                Console::get_instance().print_success("Current speed scale: " + std::to_string(speed_scale));
-            }
-        },
-        "Set time speed multiplier",
-        "speed <value>"
-    );
-
+    ConsoleCommands::init(window);
 
     DebugText debug_text(Singleton::Variables::main_font);
     
@@ -287,7 +180,7 @@ int main() {
                 }
                 
                 if (code == sf::Keyboard::Key::F6) {
-                    debug_hitboxes = !debug_hitboxes;
+                    RenderSystems::draw_hitboxes_enabled = !RenderSystems::draw_hitboxes_enabled;
                 }
             }
             
@@ -296,7 +189,7 @@ int main() {
 
         sf::Time elapsed = clock.restart();
         float delta_time = elapsed.asSeconds();
-        float scaled_delta_time = delta_time * speed_scale;
+        float scaled_delta_time = delta_time * Singleton::Variables::speed_scale;
 
         health_system(registry);
         attack_system_manager_handler(registry, scaled_delta_time);
@@ -310,19 +203,19 @@ int main() {
         movement_system(registry, scaled_delta_time);
         glue_system(registry);
         
+        CameraSystems::update(registry, window, scaled_delta_time);
+
         projectile_system(registry, scaled_delta_time);
         
-        camera_system(registry, window, scaled_delta_time);
-
         sprite_animation_control_system(registry);
-        sprite_animation_system(registry, scaled_delta_time);
+        SpriteSystems::update(registry, window, scaled_delta_time);
 
         Console::get_instance().update(window, delta_time);
 
         window.clear(sf::Color::Black);
 
         render_tilemap(registry, window);
-        render_system(registry, window);
+        RenderSystems::update(registry, window);
         
         window.setView(window.getDefaultView()); 
         
