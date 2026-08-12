@@ -13,21 +13,26 @@ namespace explosion {
         auto entity = registry.create();
         registry.emplace<Transform>(entity);
 
-        auto sprite = registry.emplace<Sprite>(entity,
+        auto& sprite = registry.emplace<Sprite>(entity,
             resourceloader.load<
                 sf::Texture,
                 sf::TextureLoader
             >("res/textures/explosion/spritesheet.png")
         );
-        auto exp = registry.emplace<Explosion>(entity); {
-            exp.damage = 999.0f;
-            exp.radius = 1200.0f;
+        auto& sprite_animation = registry.emplace<SpriteAnimation>(entity,
+            resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/explosion/spritesheet.json")
+        ); {
+            sprite_animation.play("default");
+        }
+
+        auto& exp = registry.emplace<Explosion>(entity); {
+            exp.damage = 999.f;
+            exp.radius = 12000.f;
+            exp.lifetime = 10.f;
             exp.soundbuffer = resourceloader.load<
                 sf::SoundBuffer,
                 sf::SoundBufferLoader
             >("res/audio/explosion.mp3");
-
-
         }
 
         return entity;

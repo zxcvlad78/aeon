@@ -11,7 +11,9 @@
 
 struct PairHash {
     std::size_t operator()(const std::pair<int, int>& p) const {
-        return std::hash<int>()(p.first) ^ (std::hash<int>()(p.second) << 1);
+        std::size_t h1 = std::hash<int>()(p.first);
+        std::size_t h2 = std::hash<int>()(p.second);
+        return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
     }
 };
 
@@ -64,28 +66,24 @@ public:
         }
     }
 
-    std::vector<Entity> query(const sf::FloatRect& aabb) const {
-        float left   = aabb.position.x;
-        float top    = aabb.position.y;
-        float right  = aabb.position.x + aabb.size.x;
-        float bottom = aabb.position.y + aabb.size.y;
+    void query(const sf::FloatRect& aabb, std::vector<Entity>& out_candidates) const {
+        out_candidates.clear();
 
-        auto [x_min, y_min] = get_cell_coords(left, top);
-        auto [x_max, y_max] = get_cell_coords(right, bottom);
+        auto [x_min, y_min] = get_cell_coords(aabb.position.x, aabb.position.y);
+        auto [x_max, y_max] = get_cell_coords(aabb.position.x + aabb.size.x, aabb.position.y + aabb.size.y);
 
-        std::unordered_set<Entity> unique;
         for (int x = x_min; x <= x_max; ++x) {
             for (int y = y_min; y <= y_max; ++y) {
                 auto it = cells_.find({x, y});
-                if (it != cells_.end()) {
-                    for (Entity e : it->second) {
-                        unique.insert(e);
-                    }
+                if (it != cells_.end() && !it->second.empty()) {
+                    out_candidates.insert(out_candidates.end(), it->second.begin(), it->second.end());
                 }
             }
         }
 
-        return std::vector<Entity>(unique.begin(), unique.end());
+        std::sort(out_candidates.begin(), out_candidates.end());
+        auto last = std::unique(out_candidates.begin(), out_candidates.end());
+        out_candidates.erase(last, out_candidates.end());
     }
 
 private:

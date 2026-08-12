@@ -221,6 +221,7 @@ int main() {
 
         TileMapSystems::update(registry, window);
         RenderSystems::update(registry, window);
+        render_healthbar(registry, window);
 
         window.setView(window.getDefaultView()); 
         

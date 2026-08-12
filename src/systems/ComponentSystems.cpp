@@ -174,11 +174,14 @@ void explosion_sus(entt::registry& registry, float dt) {
         spatial_hash.insert(entity, transform.position, hitbox);
     }
 
-    auto view = registry.view<Transform, Explosion>();
+    static std::vector<entt::entity> candidates_buffer;
     std::vector<entt::entity> explosions_to_remove;
+
+    auto view = registry.view<Transform, Explosion>();
     for (auto [entity, transform, explosion] : view.each()) {
         if (explosion.time_elapsed == 0.0f)  {
             soundplayer.play(explosion.soundbuffer);
+            printf("Explosion radius: %f\n", explosion.radius);
         }
 
         explosion.time_elapsed += dt;
@@ -193,11 +196,10 @@ void explosion_sus(entt::registry& registry, float dt) {
         query_aabb.position = {transform.position.x - explosion.radius, transform.position.y - explosion.radius};
         query_aabb.size = {explosion.radius * 2.0f, explosion.radius * 2.0f};
 
-        auto candidates = spatial_hash.query(query_aabb);
+        spatial_hash.query(query_aabb, candidates_buffer);
+        //printf("Candidates %zx\n", candidates_buffer.size());
 
-        printf("Candidates %u\n", candidates.size());
-
-        for (auto target_entity : candidates) {
+        for (auto target_entity : candidates_buffer) {
             if (explosion.damaged_entities.find(target_entity) != explosion.damaged_entities.end())
                 continue;
             
@@ -210,13 +212,16 @@ void explosion_sus(entt::registry& registry, float dt) {
             sf::Vector2f explosion_center = transform.position;
 
             if (target_hitbox->radius > 0.0f) {
+                printf("radius > 0\n");
                 sf::Vector2f target_center = target_transform->position + target_hitbox->offset;
                 float dx = explosion_center.x - target_center.x;
                 float dy = explosion_center.y - target_center.y;
                 float dist_sq = dx*dx + dy*dy;
                 float radius_sum = explosion.radius + target_hitbox->radius;
+                printf("dist_sq: %f, radius_sum: %f, radius_sumx2: %f\n", dist_sq, radius_sum, radius_sum * radius_sum);
                 hit = (dist_sq <= radius_sum * radius_sum);
             } else {
+                printf("rect\n");
                 sf::FloatRect rect;
                 rect.position = {target_transform->position.x + target_hitbox->offset.x,
                                 target_transform->position.y + target_hitbox->offset.y};
@@ -226,12 +231,16 @@ void explosion_sus(entt::registry& registry, float dt) {
                 float closest_y = std::max(rect.position.y, std::min(explosion_center.y, rect.position.y + rect.size.y));
                 float dx = explosion_center.x - closest_x;
                 float dy = explosion_center.y - closest_y;
+                printf("closest_x: %f, closest_y: %f, dx: %f, dy: %f\n",
+                    closest_x, closest_y, dx, dy
+                );
+
                 hit = (dx*dx + dy*dy) <= (explosion.radius * explosion.radius);
             }
             
 
             if (hit) {
-                printf("Hit %u\n", candidates.size());
+                printf("Hit %zx\n", candidates_buffer.size());
                 target_health->apply_damage(explosion.damage);
                 explosion.damaged_entities.insert(target_entity);
             }
@@ -258,6 +267,7 @@ void projectile_system(entt::registry& registry, float dt) {
         spatial_hash.insert(entity, aabb);
     }
 
+    static std::vector<entt::entity> candidates_buffer;
     auto view1 = registry.view<Transform, Projectile, Hitbox>();
     std::vector<entt::entity> to_destroy;
 
@@ -276,9 +286,9 @@ void projectile_system(entt::registry& registry, float dt) {
             hitbox1.size
         );
 
-        auto candidates = spatial_hash.query(aabb1);
+        spatial_hash.query(aabb1, candidates_buffer);
 
-        for (auto entity2 : candidates) {
+        for (auto entity2 : candidates_buffer) {
             if (entity2 == entity1 || entity2 == projectile1.source) continue;
 
             const auto* transform2 = registry.try_get<Transform>(entity2);
