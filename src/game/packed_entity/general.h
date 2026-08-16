@@ -27,7 +27,7 @@ namespace explosion {
 
         auto& exp = registry.emplace<Explosion>(entity); {
             exp.damage = 999.f;
-            exp.radius = 12000.f;
+            exp.radius = 1200.f;
             exp.lifetime = 10.f;
             exp.soundbuffer = resourceloader.load<
                 sf::SoundBuffer,
