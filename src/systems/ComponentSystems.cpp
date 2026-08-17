@@ -138,37 +138,6 @@ void sprite_animation_control_system(entt::registry& registry) {
     }
 }
 
-
-void render_healthbar(entt::registry& registry, sf::RenderWindow& window) {
-    auto view = registry.view<HealthBar, Transform, Health>();
-    
-    for (auto [entity, healthbar, transform, health] : view.each()) {
-        sf::Vector2f pos = transform.position + healthbar.offset;
-
-        sf::RectangleShape color_bar(sf::Vector2f(healthbar.size.x, healthbar.size.y));
-        color_bar.setPosition(pos);
-        color_bar.setFillColor(healthbar.bg_color);
-        color_bar.setOutlineColor(healthbar.outline_color);
-        color_bar.setOutlineThickness(healthbar.outline_thickness);
-        window.draw(color_bar);
-    
-        float max_health = health.get_max_value();
-        float current_health = health.get_value();
-
-        float ratio = max_health > 0.0f ? (current_health / max_health) : 0.0f;
-        float width = healthbar.size.x * ratio;
-        
-        sf::RectangleShape full_bar(sf::Vector2f(width, healthbar.size.y));
-        full_bar.setPosition(pos);
-        full_bar.setFillColor(
-            Math::lerp_color(healthbar.color_empty, healthbar.color_full, ratio)
-        );
-
-        window.draw(full_bar);
-
-    }
-}
-
 void explosion_sus(entt::registry& registry, float dt) {
     const float CELL_SIZE = 64.0f;
     SpatialHash spatial_hash(CELL_SIZE);

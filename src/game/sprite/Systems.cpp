@@ -5,10 +5,9 @@
 namespace SpriteSystems {
     void update(entt::registry& registry, sf::RenderWindow& window, float dt) {
         update_animation(registry, dt);
-        draw(registry, window);
     }
 
-    void draw(entt::registry& registry, sf::RenderWindow& window) {
+    void render(entt::registry& registry, sf::RenderWindow& window) {
         struct Renderable {
             sf::Sprite* sprite;
             sf::Vector2f position;

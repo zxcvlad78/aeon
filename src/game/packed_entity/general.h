@@ -2,8 +2,10 @@
 
 #include <Aeon.hpp>
 #include "../../ResourceLoader.hpp"
+#include "../src/SoundPlayer.hpp"
 #include "../singleton/singleton.hpp"
-#include "../../utils/rng.hpp"
+#include "../src/utils/math.hpp"
+#include "../src/utils/rng.hpp"
 
 namespace packed_entity {
 

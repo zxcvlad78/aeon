@@ -15,4 +15,7 @@
 #include "../src/game/camera/Systems.hpp"
 #include "../src/game/particle/Components.hpp"
 #include "../src/game/particle/Systems.hpp"
+#include "../src/game/progressbar/Components.hpp"
+#include "../src/game/progressbar/Systems.hpp"
+
 #include "../src/game/packed_entity/general.h"

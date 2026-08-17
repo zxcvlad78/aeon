@@ -6,8 +6,8 @@
 
 namespace RenderSystems  {
     void update(entt::registry& registry, sf::RenderWindow& window);
-    void draw_hitboxes(entt::registry& registry, sf::RenderWindow& window);
+    void render_hitboxes(entt::registry& registry, sf::RenderWindow& window);
 
     extern bool enabled;
-    extern bool draw_hitboxes_enabled;
+    extern bool render_hitboxes_enabled;
 }

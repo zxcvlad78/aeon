@@ -14,7 +14,6 @@ void sprite_animation_control_system(entt::registry& registry);
 void attack_system_manager_handler(entt::registry& registry, float dt);
 
 void projectile_system(entt::registry& registry, float dt);
-void render_healthbar(entt::registry& registry, sf::RenderWindow& window);
 
 void health_system(entt::registry& registry);
 

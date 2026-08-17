@@ -6,7 +6,6 @@
 #include "game/packed_entity/general.h"
 
 #include "systems/ComponentSystems.hpp"
-#include "systems/UIComponentSystems.hpp"
 
 #include <Aeon.hpp>
 
@@ -24,7 +23,7 @@ bool AISystems::enabled = true;
 bool MobSystems::enabled = true;
 bool MobSpawnerSystems::enabled = true;
 bool RenderSystems::enabled = true;
-bool RenderSystems::draw_hitboxes_enabled = false;
+bool RenderSystems::render_hitboxes_enabled = false;
 
 float speed_scale = 1.0f;
 
@@ -121,7 +120,7 @@ int main() {
                 }
                 
                 if (code == sf::Keyboard::Key::F6) {
-                    RenderSystems::draw_hitboxes_enabled = !RenderSystems::draw_hitboxes_enabled;
+                    RenderSystems::render_hitboxes_enabled = !RenderSystems::render_hitboxes_enabled;
                 }
 
                 if (code == sf::Keyboard::Key::F7) {
@@ -136,6 +135,9 @@ int main() {
         float delta_time = elapsed.asSeconds();
         float scaled_delta_time = delta_time * Singleton::Variables::speed_scale;
 
+        movement_system(registry, scaled_delta_time);
+        glue_system(registry);
+
         attack_system_manager_handler(registry, scaled_delta_time);
         
         AISystems::update(registry, scaled_delta_time);
@@ -144,33 +146,28 @@ int main() {
         
         vector2_testing_system(registry, scaled_delta_time);
 
-        movement_system(registry, scaled_delta_time);
-        glue_system(registry);
         explosion_sus(registry, scaled_delta_time);
-
         CameraSystems::update(registry, window, scaled_delta_time);
 
         projectile_system(registry, scaled_delta_time);
         health_system(registry);
         
         sprite_animation_control_system(registry);
+        
         SpriteSystems::update(registry, window, scaled_delta_time);
-
-        Console::get_instance().update(window, delta_time);
+        TileMapSystems::update(registry);
+        ProgressBarSystems::update(registry);
 
         window.clear(sf::Color::Black);
 
-        TileMapSystems::update(registry, window);
         RenderSystems::update(registry, window);
-        render_healthbar(registry, window);
 
         window.setView(window.getDefaultView()); 
-        
-        ui_render_system(registry, window);
         
         debug_text.update(registry, delta_time);
         debug_text.render(window);
 
+        Console::get_instance().update(window, delta_time);
         Console::get_instance().render(window);
 
         window.display();

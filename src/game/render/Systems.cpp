@@ -1,17 +1,18 @@
 #include "Systems.hpp"
-
-#include "../include/Components.hpp"
-#include "../sprite/Systems.hpp"
+#include <Aeon.hpp>
 
 namespace RenderSystems {
     void update(entt::registry& registry, sf::RenderWindow& window) {
         if (!enabled) return;
-        SpriteSystems::draw(registry, window);
 
-        if (draw_hitboxes_enabled) draw_hitboxes(registry, window);
+        TileMapSystems::render(registry, window);
+        SpriteSystems::render(registry, window);
+        ProgressBarSystems::render(registry, window);
+
+        if (render_hitboxes_enabled) render_hitboxes(registry, window);
     }
 
-    void draw_hitboxes(entt::registry& registry, sf::RenderWindow& window) {
+    void render_hitboxes(entt::registry& registry, sf::RenderWindow& window) {
         for (auto [entity, transform, hitbox] : registry.view<Transform, Hitbox>().each()) {
             sf::Vector2f pos = transform.position + hitbox.offset;
     

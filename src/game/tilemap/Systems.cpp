@@ -2,8 +2,8 @@
 
 namespace TileMapSystems {
 
-void update(entt::registry& registry, sf::RenderWindow& window) {
-    render(registry, window);
+void update(entt::registry& registry) {
+    
 }
 
 void render(entt::registry& registry, sf::RenderWindow& window) {
