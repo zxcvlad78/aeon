@@ -52,6 +52,14 @@ namespace Animation
         float fps = 12.f;
         bool is_looping = true;
         std::vector<FrameData> frames;
+
+        float duration() const {
+            if (fps == 0.0f) return 0.0f;
+            int size = frames.size();
+            if (size == 0) return 0.0f;
+
+            return fps / size;
+        }
     };
 
     struct Loader {

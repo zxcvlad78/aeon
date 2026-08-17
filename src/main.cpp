@@ -50,67 +50,8 @@ int main() {
     
     entt::registry registry;
 
-    auto paren = packed_entity::gad::spawn(registry); {
-        if (auto* t = registry.try_get<Transform>(paren)) {
-            t->position = sf::Vector2{85.f, 25.f};
-        }
-        if (auto* anim = registry.try_get<SpriteAnimation>(paren)) {
-            anim->play("idle");
-        }
-    }
-    
-
     //Player
-    auto player = registry.create();
-    {
-        registry.emplace<ZIndex>(player, 1);
-        registry.emplace<Transform>(player).position = {50.f , 50.f};
-        registry.emplace<Velocity>(player, 0.f, 0.f, true);
-        registry.emplace<SpriteAnimationControl>(player);
-        registry.emplace<PlayerInput>(player);
-        
-        auto& attack = registry.emplace<Attack>(player); {
-            attack.spawn_func = packed_entity::default_projectile::spawn;
-            attack.interval = 0.2f; 
-        }
-        
-        registry.emplace<Faction>(player, "player");
-        //registry.emplace<Health>(player, 100.f, 100.f);
-        registry.emplace<MoveSpeed>(player, 100.0f);
-        
-        Hitbox player_hitbox;
-            player_hitbox.size = {16.f, 32.f};
-            player_hitbox.offset = {-player_hitbox.size.x / 2.f, -player_hitbox.size.y / 2.f};
-            registry.emplace<Hitbox>(player, player_hitbox);
-    
-        Sprite sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/vlad/atlas.png"));
-            sprite.offset = {-8.f, -16.f};
-            registry.emplace<Sprite>(player, sprite);
-    
-        SpriteAnimation sprite_anim;
-            sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/vlad/spritesheet.json");
-            registry.emplace<SpriteAnimation>(player, sprite_anim);
-    
-        HealthBar healthbar;
-            healthbar.offset = sprite.offset + sf::Vector2f(-4.f, -6.f);
-            healthbar.size = {24.f, 3.5f};
-            healthbar.color = sf::Color::Black;
-            healthbar.color_empty = sf::Color::Red;
-            healthbar.color_full = sf::Color::Green;
-         
-            registry.emplace<HealthBar>(player, healthbar);
-    
-        Camera player_camera;
-            player_camera.view = sf::View(
-                    {0.f, 0.f},
-                    {
-                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.x) / 3.0f,
-                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.y) / 3.0f
-                    }
-                );
-                 
-            registry.emplace<Camera>(player, player_camera);
-    }
+    auto player = packed_entity::player::spawn(registry);
 
     {auto entity = registry.create();
     auto& glued_to = registry.emplace<GluedTo>(entity, player);

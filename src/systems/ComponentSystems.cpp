@@ -11,6 +11,8 @@
 #include "../game/sprite/Components.hpp"
 #include "../utils/spatial_hashing.hpp"
 
+#include "../game/packed_entity/general.h"
+
 extern bool enable_render_system;
 
 void player_input_system(entt::registry& registry, sf::RenderWindow& window) {
@@ -145,7 +147,7 @@ void render_healthbar(entt::registry& registry, sf::RenderWindow& window) {
 
         sf::RectangleShape color_bar(sf::Vector2f(healthbar.size.x, healthbar.size.y));
         color_bar.setPosition(pos);
-        color_bar.setFillColor(healthbar.color_empty);
+        color_bar.setFillColor(healthbar.bg_color);
         color_bar.setOutlineColor(healthbar.outline_color);
         color_bar.setOutlineThickness(healthbar.outline_thickness);
         window.draw(color_bar);
@@ -158,7 +160,9 @@ void render_healthbar(entt::registry& registry, sf::RenderWindow& window) {
         
         sf::RectangleShape full_bar(sf::Vector2f(width, healthbar.size.y));
         full_bar.setPosition(pos);
-        full_bar.setFillColor(ratio < 0.5f ? healthbar.color_empty : healthbar.color_full);
+        full_bar.setFillColor(
+            Math::lerp_color(healthbar.color_empty, healthbar.color_full, ratio)
+        );
 
         window.draw(full_bar);
 
@@ -382,6 +386,14 @@ void health_system(entt::registry& registry) {
 
     for (auto entity : to_destroy) {
         if (!registry.valid(entity)) { continue; }
+
+        if (registry.all_of<Transform>(entity)) {
+            auto& t = registry.get<Transform>(entity);
+            packed_entity::blood_particles::spawn(registry, t.position);
+        } else {
+            packed_entity::blood_particles::spawn(registry, {0.f,0.f});
+        }
+
         registry.destroy(entity);
     }
 }

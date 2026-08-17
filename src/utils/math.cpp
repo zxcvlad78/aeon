@@ -17,4 +17,15 @@ namespace Math {
 
         return direction;
     }
+
+
+    sf::Color lerp_color(const sf::Color& a, const sf::Color& b, float t) {
+        t = std::clamp(t, 0.0f, 1.0f);
+        return sf::Color(
+            static_cast<uint8_t>(a.r + (b.r - a.r) * t),
+            static_cast<uint8_t>(a.g + (b.g - a.g) * t),
+            static_cast<uint8_t>(a.b + (b.b - a.b) * t),
+            static_cast<uint8_t>(a.a + (b.a - a.a) * t)
+        );
+    }
 }

@@ -13,4 +13,6 @@
 #include "../src/game/sprite/Systems.hpp"
 #include "../src/game/camera/Components.hpp"
 #include "../src/game/camera/Systems.hpp"
+#include "../src/game/particle/Components.hpp"
+#include "../src/game/particle/Systems.hpp"
 #include "../src/game/packed_entity/general.h"

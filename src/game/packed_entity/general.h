@@ -7,6 +7,33 @@
 
 namespace packed_entity {
 
+namespace blood_particles {
+    inline entt::entity spawn(entt::registry& registry, sf::Vector2f position = sf::Vector2f{0.f, 0.f}) {
+        auto entity = registry.create();
+        registry.emplace<ZIndex>(entity, 2);
+
+        auto& transform = registry.emplace<Transform>(entity); {
+            transform.position = position;
+        }
+        auto& sprite = registry.emplace<Sprite>(entity,
+            resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/blood/spritesheet.png")
+        );
+        auto& sprite_animation = registry.emplace<SpriteAnimation>(entity); {
+            sprite_animation.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/blood/spritesheet.json");
+            sprite_animation.play("default");
+        }
+        auto& particle = registry.emplace<Particle>(entity); {
+            particle.lifetime = sprite_animation.current_animation->duration();
+        }
+
+        soundplayer.play(resourceloader.load<sf::SoundBuffer, sf::SoundBufferLoader>
+            ("res/audio/blood_splatter.mp3"),
+            transform.position
+        );
+
+        return entity;
+    }
+}
 
 namespace explosion {
     inline ::entt::entity spawn(::entt::registry& registry) {
@@ -207,7 +234,7 @@ namespace zobi {
             auto& healthbar = registry.emplace<HealthBar>(entity); {
                 healthbar.offset = sprite.offset + sf::Vector2f(-4.f, -6.f);
                 healthbar.size = {24.f, 3.5f};
-                healthbar.color = sf::Color::Black;
+                healthbar.bg_color = sf::Color::Black;
                 healthbar.color_empty = sf::Color::Red;
                 healthbar.color_full = sf::Color::Green;
             }
@@ -276,7 +303,6 @@ namespace player {
         HealthBar healthbar;
             healthbar.offset = sprite.offset + sf::Vector2f(-4.f, -6.f);
             healthbar.size = {24.f, 3.5f};
-            healthbar.color = sf::Color::Black;
             healthbar.color_empty = sf::Color::Red;
             healthbar.color_full = sf::Color::Green;
          
