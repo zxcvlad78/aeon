@@ -2,7 +2,23 @@
 #include <Aeon.hpp>
 
 namespace ProgressBarSystems {
+    inline void healthbar(entt::registry& registry) {
+        auto view = registry.view<GluedTo, ProgressBar, ProgressBarType::HealthBar>();
+        for (auto [e, gt, pb] : view.each()) {
+            auto glued_entity = gt.entity;
+            if (!registry.valid(glued_entity)) {
+                registry.destroy(e);
+                continue;
+            }
+            if (const Health* health = registry.try_get<Health>(glued_entity)) {
+                pb.set_value(health->get_value());
+                pb.set_max_value(health->get_max_value());
+            }
+        }
+    }
+
     void update(entt::registry& registry) {
+        healthbar(registry);
         auto view = registry.view<ProgressBar, Transform>();
         
         for (auto [entity, progressbar, transform] : view.each()) {

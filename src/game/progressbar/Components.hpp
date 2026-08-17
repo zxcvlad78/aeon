@@ -31,3 +31,7 @@ private:
     float max_value;
 };
 
+namespace ProgressBarType {
+    struct HealthBar { };
+
+}

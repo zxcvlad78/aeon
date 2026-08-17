@@ -9,6 +9,31 @@
 
 namespace packed_entity {
 
+namespace healthbar {
+    inline entt::entity spawn(entt::registry& registry, entt::entity target_entity) {
+        auto entity = registry.create();
+        
+        auto& transform = registry.emplace<Transform>(entity);
+        auto& glued_to = registry.emplace<GluedTo>(entity, target_entity);
+
+        sf::Vector2f offset = {};
+        if (auto* sprite = registry.try_get<Sprite>(target_entity)) {
+            offset = sprite->offset;
+        }
+
+        auto& progressbar = registry.emplace<ProgressBar>(entity); {
+            progressbar.offset = offset + sf::Vector2f(-4.f, -6.f);
+            progressbar.size = {24.f, 3.5f};
+            progressbar.bg_color = sf::Color::Black;
+            progressbar.color_empty = sf::Color::Red;
+            progressbar.color_full = sf::Color::Green;
+        }
+        registry.emplace<ProgressBarType::HealthBar>(entity);
+
+        return entity;
+    }
+}
+
 namespace blood_particles {
     inline entt::entity spawn(entt::registry& registry, sf::Vector2f position = sf::Vector2f{0.f, 0.f}) {
         auto entity = registry.create();
@@ -16,10 +41,12 @@ namespace blood_particles {
 
         auto& transform = registry.emplace<Transform>(entity); {
             transform.position = position;
+            transform.scale = { 1.5f, 1.5f };
         }
         auto& sprite = registry.emplace<Sprite>(entity,
             resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/blood/spritesheet.png")
-        );
+        ); { sprite.center = true; }
+
         auto& sprite_animation = registry.emplace<SpriteAnimation>(entity); {
             sprite_animation.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/blood/spritesheet.json");
             sprite_animation.play("default");
@@ -232,16 +259,10 @@ namespace zobi {
                 Spritesheet::Resource, Spritesheet::Loader
                 >("res/textures/zloipacan/spritesheet.json"); // spritesheet path
             }
-
-            auto& healthbar = registry.emplace<HealthBar>(entity); {
-                healthbar.offset = sprite.offset + sf::Vector2f(-4.f, -6.f);
-                healthbar.size = {24.f, 3.5f};
-                healthbar.bg_color = sf::Color::Black;
-                healthbar.color_empty = sf::Color::Red;
-                healthbar.color_full = sf::Color::Green;
-            }
         }
         
+        packed_entity::healthbar::spawn(registry, entity);
+
         return entity;
     }
 };
@@ -289,11 +310,12 @@ namespace player {
         registry.emplace<Health>(entity, 100.f, 100.f);
         registry.emplace<MoveSpeed>(entity, 100.0f);
         
-        Hitbox player_hitbox;
+        Hitbox player_hitbox; {
             player_hitbox.size = {16.f, 32.f};
             player_hitbox.offset = {-player_hitbox.size.x / 2.f, -player_hitbox.size.y / 2.f};
             registry.emplace<Hitbox>(entity, player_hitbox);
-    
+        }
+
         Sprite sprite(resourceloader.load<sf::Texture, sf::TextureLoader>("res/textures/vlad/atlas.png"));
             sprite.offset = {-8.f, -16.f};
             registry.emplace<Sprite>(entity, sprite);
@@ -302,13 +324,6 @@ namespace player {
             sprite_anim.spritesheet = resourceloader.load<Spritesheet::Resource, Spritesheet::Loader>("res/textures/vlad/spritesheet.json");
             registry.emplace<SpriteAnimation>(entity, sprite_anim);
     
-        HealthBar healthbar;
-            healthbar.offset = sprite.offset + sf::Vector2f(-4.f, -6.f);
-            healthbar.size = {24.f, 3.5f};
-            healthbar.color_empty = sf::Color::Red;
-            healthbar.color_full = sf::Color::Green;
-         
-            registry.emplace<HealthBar>(entity, healthbar);
     
         Camera player_camera;
             player_camera.view = sf::View(
@@ -321,6 +336,8 @@ namespace player {
                  
             registry.emplace<Camera>(entity, player_camera);
         
+        packed_entity::healthbar::spawn(registry, entity);
+
         return entity;
     }
 }

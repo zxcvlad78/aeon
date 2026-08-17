@@ -71,7 +71,8 @@ public:
         }
     }
 
-    float get_value() { return value; }
+    float get_value() const { return value; }
+    float get_max_value() const { return max_value; }
 
     void apply_damage(float damage) {
         set_value(value - damage);
@@ -144,14 +145,3 @@ struct SpriteAnimationControl {
     std::string left_anim = "walk_left";
     std::string right_anim = "walk_right";
 };
-
-struct HealthBar {
-    sf::Vector2f size = {32.f, 8.f};
-    sf::Vector2f offset = {0.f, 0.f};
-    sf::Color bg_color = sf::Color::Black;
-    sf::Color outline_color = sf::Color(12, 12, 12);
-    sf::Color color_empty = sf::Color::Black;
-    sf::Color color_full = sf::Color::White;
-    float outline_thickness = 1.0f;
-};
-
