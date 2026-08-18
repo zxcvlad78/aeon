@@ -348,6 +348,7 @@ void health_system(entt::registry& registry) {
     std::vector<entt::entity> to_destroy;
 
     for (auto [entity, health] : view.each()) {
+        if (registry.all_of<Invulnerable>(entity)) continue;
         if (health.get_value() <= 0.f) {
             to_destroy.push_back(entity);
         }

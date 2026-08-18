@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Components.hpp>
 #include "../systems/ComponentSystems.hpp"
 #include "../game/singleton/singleton.hpp"
 #include "console/Console.hpp"
@@ -10,7 +11,7 @@
 #include "../game/mob_spawner/Systems.hpp"
 
 namespace ConsoleCommands {
-    inline void init(sf::RenderWindow& window) {
+    inline void init(sf::RenderWindow& window, entt::registry& registry) {
         Console::get_instance().register_command(
             "fps_max",
             [&window](const std::vector<std::string>& args) {
@@ -27,8 +28,35 @@ namespace ConsoleCommands {
             "fps_max <value>"
         );
         Console::get_instance().register_command(
+            "player.invulnerable",
+            [&registry](const std::vector<std::string>& args) {
+                if (!args.empty()) {
+                    try {
+                        int val = std::stoi(args[0]); bool invulnerable = val > 0;
+                        
+                        if (invulnerable) {
+                            for (auto [e, pc] : registry.view<PlayerInput>().each()) {
+                                registry.emplace_or_replace<Invulnerable>(e);
+                            }
+                        } else {
+                            for (auto [e, pc] : registry.view<PlayerInput>().each()) {
+                                if (registry.all_of<Invulnerable>(e))
+                                    registry.remove<Invulnerable>(e);
+                            }
+                        }
+                        
+                        Console::get_instance().print_success("player.invulnerable: " + invulnerable);
+                    } catch (const std::exception& e) {
+                        Console::get_instance().print_error(e.what());
+                    }
+                }
+            },
+            "Set player invulnerable enabled",
+            "player.invulnerable <value>"
+        );
+        Console::get_instance().register_command(
             "collision.enabled",
-            [&window](const std::vector<std::string>& args) {
+            [](const std::vector<std::string>& args) {
                 if (!args.empty()) {
                     try {
                         int val = std::stoi(args[0]);
@@ -44,7 +72,7 @@ namespace ConsoleCommands {
         );
         Console::get_instance().register_command(
             "render.enabled",
-            [&window](const std::vector<std::string>& args) {
+            [](const std::vector<std::string>& args) {
                 if (!args.empty()) {
                     try {
                         int val = std::stoi(args[0]);
@@ -60,7 +88,7 @@ namespace ConsoleCommands {
         );
         Console::get_instance().register_command(
             "ai.enabled",
-            [&window](const std::vector<std::string>& args) {
+            [](const std::vector<std::string>& args) {
                 if (!args.empty()) {
                     try {
                         int val = std::stoi(args[0]);
@@ -76,7 +104,7 @@ namespace ConsoleCommands {
         );
         Console::get_instance().register_command(
             "mob.enabled",
-            [&window](const std::vector<std::string>& args) {
+            [](const std::vector<std::string>& args) {
                 if (!args.empty()) {
                     try {
                         int val = std::stoi(args[0]);
@@ -114,7 +142,7 @@ namespace ConsoleCommands {
         );
         Console::get_instance().register_command(
             "mob.spawn.enabled",
-            [&window](const std::vector<std::string>& args) {
+            [](const std::vector<std::string>& args) {
                 if (!args.empty()) {
                     try {
                         int val = std::stoi(args[0]);

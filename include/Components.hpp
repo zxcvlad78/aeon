@@ -145,3 +145,5 @@ struct SpriteAnimationControl {
     std::string left_anim = "walk_left";
     std::string right_anim = "walk_right";
 };
+
+struct Invulnerable { };

@@ -12,6 +12,7 @@ find_package(EnTT CONFIG REQUIRED)
 find_path(TERMCOLOR_INCLUDE_DIRS "termcolor/termcolor.hpp")
 
 
+
 file(GLOB_RECURSE COMMON_SOURCES
     "src/*.cpp" "src/*.hpp" "src/*.h"
 )

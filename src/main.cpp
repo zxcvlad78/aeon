@@ -43,11 +43,11 @@ int main() {
     }
 
     Console::get_instance().init(Singleton::Variables::main_font, 16);
-    ConsoleCommands::init(window);
 
     DebugText debug_text(Singleton::Variables::main_font);
     
     entt::registry registry;
+    ConsoleCommands::init(window, registry);
 
     //Player
     auto player = packed_entity::player::spawn(registry);
