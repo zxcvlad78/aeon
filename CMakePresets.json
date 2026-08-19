@@ -2,20 +2,36 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "vcpkg-default",
-            "displayName": "vcpkg auto preset",
-            "description": "auto config vcpkg",
-            "binaryDir": "${sourceDir}/build",
+            "name": "vcpkg-debug",
+            "displayName": "vcpkg Debug",
+            "description": "Debug build with vcpkg",
+            "binaryDir": "${sourceDir}/build/debug",
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "vcpkg-release",
+            "displayName": "vcpkg Release",
+            "description": "Release build with vcpkg",
+            "binaryDir": "${sourceDir}/build/release",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_BUILD_TYPE": "Release"
             }
         }
     ],
-
     "buildPresets": [
         {
-            "name": "vcpkg-default",
-            "jobs": 10
+            "name": "vcpkg-debug",
+            "configurePreset": "vcpkg-debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "vcpkg-release",
+            "configurePreset": "vcpkg-release",
+            "configuration": "Release"
         }
     ]
 }

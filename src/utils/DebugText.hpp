@@ -39,7 +39,7 @@ public:
         timer += dt;
         frame_count++;
 
-        if (timer >= 0.5f) {
+        if (timer >= 0.1f) {
             int fps = static_cast<int>(frame_count / timer);
 
             auto entity_count = registry.storage<entt::entity>().size();

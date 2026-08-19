@@ -2,10 +2,10 @@
     "type": "prefab",
     "display_name": "Zobi",
     "components":
-    [
-        "Mob",
-        "Transform", 0.0, 0.0, 0.0,
-        "Velocity",
+    {
+        "Mob": [],
+        "Transform": [],
+        "Velocity", // и тд)0)
         "ZIndex", 1,
         "SpriteAnimationControl",
         "Health", 10, 100,
@@ -19,6 +19,6 @@
         "Sprite",
         "SpriteAnimation",
         "HealthBar"
-    ]
+    }
 
 }
