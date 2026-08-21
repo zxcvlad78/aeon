@@ -25,7 +25,22 @@ namespace ConsoleCommands {
                 }
             },
             "Set target framerate",
-            "fps_max <value>"
+            "fps_max <int>"
+        );
+        Console::get_instance().register_command(
+            "volume",
+            [&window](const std::vector<std::string>& args) {
+                if (!args.empty()) {
+                    try {
+                        //float vol = std::stoi(args[0]);
+                        sf::Listener::setGlobalVolume(std::stoi(args[0]));
+                    } catch (const std::exception& e) {
+                        Console::get_instance().print_error(e.what());
+                    }
+                }
+            },
+            "Set audio volume (0.0-100.0)",
+            "volume <float>"
         );
         Console::get_instance().register_command(
             "player.invulnerable",
@@ -35,11 +50,11 @@ namespace ConsoleCommands {
                         int val = std::stoi(args[0]); bool invulnerable = val > 0;
                         
                         if (invulnerable) {
-                            for (auto [e, pc] : registry.view<PlayerInput>().each()) {
+                            for (auto [e] : registry.view<Player>().each()) {
                                 registry.emplace_or_replace<Invulnerable>(e);
                             }
                         } else {
-                            for (auto [e, pc] : registry.view<PlayerInput>().each()) {
+                            for (auto [e] : registry.view<Player>().each()) {
                                 if (registry.all_of<Invulnerable>(e))
                                     registry.remove<Invulnerable>(e);
                             }
@@ -52,7 +67,7 @@ namespace ConsoleCommands {
                 }
             },
             "Set player invulnerable enabled",
-            "player.invulnerable <value>"
+            "player.invulnerable <bool>"
         );
         Console::get_instance().register_command(
             "collision.enabled",
@@ -68,7 +83,7 @@ namespace ConsoleCommands {
                 }
             },
             "Set collision enabled",
-            "collision.enabled <value>"
+            "collision.enabled <bool>"
         );
         Console::get_instance().register_command(
             "render.enabled",
@@ -84,7 +99,7 @@ namespace ConsoleCommands {
                 }
             },
             "Set render enabled",
-            "render.enabled <value>"
+            "render.enabled <bool>"
         );
         Console::get_instance().register_command(
             "ai.enabled",
@@ -100,7 +115,7 @@ namespace ConsoleCommands {
                 }
             },
             "Set AI enabled",
-            "ai.enabled <value>"
+            "ai.enabled <bool>"
         );
         Console::get_instance().register_command(
             "mob.enabled",
@@ -116,7 +131,7 @@ namespace ConsoleCommands {
                 }
             },
             "Set mob enabled",
-            "mob.enabled <value>"
+            "mob.enabled <bool>"
         );
         Console::get_instance().register_command(
             "speed",
@@ -138,7 +153,7 @@ namespace ConsoleCommands {
                 }
             },
             "Set time speed multiplier",
-            "speed <value>"
+            "speed <float>"
         );
         Console::get_instance().register_command(
             "mob.spawn.enabled",
@@ -154,7 +169,61 @@ namespace ConsoleCommands {
                 }
             },
             "Set mob spawn enabled",
-            "mob.spawn.enabled <value>"
+            "mob.spawn.enabled <bool>"
         );
+        Console::get_instance().register_command(
+            "player.respawn",
+            [&registry](const std::vector<std::string>& args) {
+                try {
+                    for (auto [e] : registry.view<Player>().each()) {
+                        registry.destroy(e);
+                    }
+                    packed_entity::player::spawn(registry);
+                } catch (const std::exception& e) {
+                    Console::get_instance().print_error(e.what());
+                }
+            },
+            "Respawn player",
+            "player.respawn"
+        );
+        Console::get_instance().register_command(
+            "player.kill",
+            [&registry](const std::vector<std::string>& args) {
+                try {
+                    for (auto [e, h] : registry.view<Player, Health>().each()) {
+                        h.apply_damage(h.get_max_value());
+                    }
+                } catch (const std::exception& e) {
+                    Console::get_instance().print_error(e.what());
+                }
+            },
+            "Kill player",
+            "player.kill"
+        );
+        Console::get_instance().register_command(
+            "player.destroy",
+            [&registry](const std::vector<std::string>& args) {
+                try {
+                    for (auto [e] : registry.view<Player>().each()) {
+                        registry.destroy(e);
+                    }
+                } catch (const std::exception& e) {
+                    Console::get_instance().print_error(e.what());
+                }
+            },
+            "Destroy player",
+            "player.destroy"
+        );
+
+        // Test
+        // for (uint8_t i = 0; i < 25; i ++) {
+        //     std::string str_i = std::to_string(i);
+        //     Console::get_instance().register_command(
+        //         "sas" + str_i,
+        //         [](const std::vector<std::string>& args) { },
+        //         "pro100 sas nomer " + str_i,
+        //         "nikak))"
+        //     );
+        // }
     }
 }

@@ -7,6 +7,11 @@
 #include <unordered_map>
 #include <deque>
 
+struct TextSelection {
+    int start;
+    int end;
+};
+
 class Console {
 public:
     struct Command {
@@ -15,6 +20,8 @@ public:
         std::string description;
         std::string usage;
     };
+
+    TextSelection text_selection;
 
 private:
     bool visible = false;
@@ -102,7 +109,7 @@ public:
 private:
     Console() = default;
     
-    void update_scrollbar();
+    void update_scrollbar(sf::RenderWindow& window);
     void update_cursor(float dt);
     void clamp_scroll();
     void add_to_history(const std::string& command);

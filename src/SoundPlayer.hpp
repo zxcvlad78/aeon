@@ -24,6 +24,7 @@ public:
         pool[next].setRelativeToListener(false);
         pool[next].setMinDistance(min_distance);
         pool[next].setAttenuation(attenuation);
+        
         pool[next].play();
         next = (next + 1) % POOL_SIZE;
     

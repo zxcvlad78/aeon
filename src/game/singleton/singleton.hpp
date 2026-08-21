@@ -8,6 +8,5 @@ namespace Singleton {
         extern sf::Font main_font;
         extern float speed_scale;
         const std::string GAME_VERSION = "v0.0.1";
-        const sf::Vector2u WINDOW_SIZE = sf::Vector2u(1280, 720);
     }
 }

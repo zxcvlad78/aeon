@@ -299,7 +299,7 @@ namespace player {
         registry.emplace<Transform>(entity).position = {50.f , 50.f};
         registry.emplace<Velocity>(entity, 0.f, 0.f, true);
         registry.emplace<SpriteAnimationControl>(entity);
-        registry.emplace<PlayerInput>(entity);
+        registry.emplace<Player>(entity);
         
         auto& attack = registry.emplace<Attack>(entity); {
             attack.spawn_func = packed_entity::default_projectile::spawn;
@@ -325,17 +325,8 @@ namespace player {
             registry.emplace<SpriteAnimation>(entity, sprite_anim);
     
     
-        Camera player_camera;
-            player_camera.view = sf::View(
-                    {0.f, 0.f},
-                    {
-                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.x) / 3.0f,
-                        static_cast<float>(Singleton::Variables::WINDOW_SIZE.y) / 3.0f
-                    }
-                );
-                 
-            registry.emplace<Camera>(entity, player_camera);
-        
+        auto& camera = registry.emplace<Camera>(entity);
+         
         packed_entity::healthbar::spawn(registry, entity);
 
         return entity;

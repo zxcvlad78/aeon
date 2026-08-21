@@ -123,9 +123,7 @@ struct Vector2Testing {
 };
 
 
-struct PlayerInput {
-    bool is_current = true;
-};
+struct Player { };
 
 struct Explosion {
     float radius = 1.0f;

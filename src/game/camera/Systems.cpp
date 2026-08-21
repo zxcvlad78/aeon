@@ -16,14 +16,12 @@ namespace CameraSystems {
 
 
             camera.view.setCenter(lex);
-            sf::Listener::setPosition({lex.x, lex.y, 0.f});
-        }
-
-        auto camera_view = registry.view<Camera>();
-        if (!camera_view.empty()) {
-            auto camera_entity = camera_view.front();
-            auto& cam = camera_view.get<Camera>(camera_entity);
-            window.setView(cam.view);
+            auto window_size = static_cast<sf::Vector2f>(window.getSize());
+            camera.view.setSize(window_size / camera.zoom);
+            if (camera.is_current()) {
+                sf::Listener::setPosition({lex.x, lex.y, 0.f});
+                window.setView(camera.view);
+            }
         }
     }
 }

@@ -16,9 +16,9 @@
 extern bool enable_render_system;
 
 void player_input_system(entt::registry& registry, sf::RenderWindow& window) {
-    auto view = registry.view<PlayerInput, MoveSpeed, Velocity>();
+    auto view = registry.view<MoveSpeed, Velocity, Player>();
 
-    for (auto [entity, player_input, movespeed, velocity] : view.each()) {
+    for (auto [entity, movespeed, velocity] : view.each()) {
         velocity.x = 0.0f;
         velocity.y = 0.0f;
 
@@ -46,10 +46,10 @@ void player_input_system(entt::registry& registry, sf::RenderWindow& window) {
 }
 
 void attack_system_manager_handler(entt::registry& registry, float dt) {
-    auto view = registry.view<Attack, Transform, PlayerInput>();
+    auto view = registry.view<Attack, Transform, Player>();
 
 
-    for (auto [entity, attack, transform, player_input] : view.each()) {
+    for (auto [entity, attack, transform] : view.each()) {
         if (attack.in_cooldown()) {
             attack.cooldown -= dt;
             continue;

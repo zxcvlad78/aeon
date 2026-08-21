@@ -32,7 +32,7 @@ int main() {
     std::tm* ltm = std::localtime(&t);
     std::cout << termcolor::green << "Game Started " << termcolor::bright_white << ltm->tm_hour << ":" << ltm->tm_min << ":" << ltm->tm_sec << termcolor::reset << std::endl;
 
-    sf::RenderWindow window(sf::VideoMode(Singleton::Variables::WINDOW_SIZE), "Aeon (" + Singleton::Variables::GAME_VERSION + ")");
+    sf::RenderWindow window(sf::VideoMode({1280, 720}), "Aeon (" + Singleton::Variables::GAME_VERSION + ")");
     window.setFramerateLimit(144);
     
     sf::Clock clock;

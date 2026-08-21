@@ -3,10 +3,32 @@
 #include <algorithm>
 #include <sstream>
 #include <cmath>
+#include <string_view>
+
 
 Console& Console::get_instance() {
     static Console instance;
     return instance;
+}
+
+inline bool is_word_char(char ch) {
+    return std::isalnum(static_cast<unsigned char>(ch));
+}
+
+inline int prev_word_position(int pos, const std::string& str) {
+    if (pos <= 0) return 0;
+    int i = pos - 1;
+    while (i >= 0 && !is_word_char(str[i])) --i;
+    while (i >= 0 && is_word_char(str[i])) --i;
+    return i + 1;
+}
+inline int next_word_position(int pos, const std::string& str) {
+    int len = str.size();
+    if (pos >= len) return len;
+    int i = pos;
+    while (i < len && !is_word_char(str[i])) ++i;
+    while (i < len && is_word_char(str[i])) ++i;
+    return i;
 }
 
 void Console::init(sf::Font& f, uint16_t character_size) {
@@ -40,6 +62,9 @@ void Console::init(sf::Font& f, uint16_t character_size) {
     output_text->setCharacterSize(char_size);
     output_text->setFillColor(sf::Color::White);
     
+    suggestion_rect.setFillColor(sf::Color::Blue);
+
+
     suggestion_text->setCharacterSize(char_size - 2);
     suggestion_text->setFillColor(sf::Color(150, 150, 150, 200));
     
@@ -147,29 +172,32 @@ void Console::autocomplete() {
     if (input_string.empty()) return;
     
     auto suggestions = get_suggestions(input_string);
-    if (suggestions.size() == 1) {
-        input_string = suggestions[0] + " ";
-        cursor_position = input_string.length();
-    } else if (suggestions.size() > 1) {
-        std::string common_prefix = suggestions[0];
-        for (size_t i = 1; i < suggestions.size(); ++i) {
-            size_t j = 0;
-            while (j < common_prefix.length() && j < suggestions[i].length() && 
-                   common_prefix[j] == suggestions[i][j]) {
-                j++;
-            }
-            common_prefix = common_prefix.substr(0, j);
-        }
+    input_string = suggestions[0] + " ";
+    cursor_position = input_string.length();
+
+    // if (suggestions.size() == 1) {
+    //     input_string = suggestions[0] + " ";
+    //     cursor_position = input_string.length();
+    // } else if (suggestions.size() > 1) {
+    //     std::string common_prefix = suggestions[0];
+    //     for (size_t i = 1; i < suggestions.size(); ++i) {
+    //         size_t j = 0;
+    //         while (j < common_prefix.length() && j < suggestions[i].length() && 
+    //                common_prefix[j] == suggestions[i][j]) {
+    //             j++;
+    //         }
+    //         common_prefix = common_prefix.substr(0, j);
+    //     }
         
-        if (common_prefix.length() > input_string.length()) {
-            input_string = common_prefix;
-            cursor_position = input_string.length();
-        } else {
-            std::string hint = "Suggestions: ";
-            for (const auto& s : suggestions) hint += s + " ";
-            print(hint, sf::Color(150, 150, 200));
-        }
-    }
+    //     if (common_prefix.length() > input_string.length()) {
+    //         input_string = common_prefix;
+    //         cursor_position = input_string.length();
+    //     } else {
+    //         std::string hint = "Suggestions: ";
+    //         for (const auto& s : suggestions) hint += s + " ";
+    //         print(hint, sf::Color(150, 150, 200));
+    //     }
+    // }
 }
 
 void Console::handle_event(const sf::Event& event, sf::RenderWindow& window) {
@@ -184,6 +212,11 @@ void Console::handle_event(const sf::Event& event, sf::RenderWindow& window) {
 
         if (!visible) return;
 
+        bool is_ctrl = sf::Keyboard::isKeyPressed(sf::Keyboard::Key::LControl);
+        
+        cursor_blink_time = 0.f;
+        cursor_visible = true;
+
         switch (key->code) {
             case sf::Keyboard::Key::Escape:
                 hide();
@@ -195,8 +228,16 @@ void Console::handle_event(const sf::Event& event, sf::RenderWindow& window) {
                 break;
             case sf::Keyboard::Key::Backspace:
                 if (cursor_position > 0 && !input_string.empty()) {
-                    input_string.erase(cursor_position - 1, 1);
-                    cursor_position--;
+                    if (is_ctrl) {
+                        int start = prev_word_position(cursor_position, input_string);
+                        if (start < cursor_position) {
+                            input_string.erase(start, cursor_position - start);
+                            cursor_position = start;
+                        }
+                    } else {
+                        input_string.erase(cursor_position - 1, 1);
+                        cursor_position--;
+                    }
                 }
                 break;
             case sf::Keyboard::Key::Delete:
@@ -205,10 +246,16 @@ void Console::handle_event(const sf::Event& event, sf::RenderWindow& window) {
                 }
                 break;
             case sf::Keyboard::Key::Left:
-                if (cursor_position > 0) cursor_position--;
+                if (is_ctrl) {
+                    cursor_position = prev_word_position(cursor_position, input_string);
+                }
+                else if (cursor_position > 0) cursor_position--;
                 break;
             case sf::Keyboard::Key::Right:
-                if (cursor_position < input_string.length()) cursor_position++;
+                if (is_ctrl) {
+                    cursor_position = next_word_position(cursor_position, input_string);
+                }
+                else if (cursor_position < input_string.length()) cursor_position++;
                 break;
             case sf::Keyboard::Key::Home:
                 cursor_position = 0;
@@ -274,10 +321,7 @@ void Console::update(sf::RenderWindow& window, float dt) {
     
     update_cursor(dt);
     
-    const auto window_size = sf::Vector2f(
-        static_cast<float>(Singleton::Variables::WINDOW_SIZE.x),
-        static_cast<float>(Singleton::Variables::WINDOW_SIZE.y)
-    );
+    const auto window_size = static_cast<sf::Vector2f>(window.getSize());
     
     background_rect.setFillColor(background_color);
     background_rect.setOutlineThickness(theme_outline_thickness);
@@ -286,7 +330,8 @@ void Console::update(sf::RenderWindow& window, float dt) {
     background_rect.setSize({window_size.x, console_height});
     background_rect.setPosition({0.f, 0.f});
     
-    
+    suggestion_rect.setFillColor(foreground_color);
+
     head_rect.setFillColor(foreground_color);
     head_rect.setOutlineThickness(theme_outline_thickness);
     head_rect.setOutlineColor(theme_outline_color);
@@ -330,7 +375,7 @@ void Console::update(sf::RenderWindow& window, float dt) {
     previous_max_scroll = max_scroll;
     was_at_bottom = (scroll_offset >= max_scroll - 2.f);
 
-    update_scrollbar();
+    update_scrollbar(window);
     clamp_scroll();
 
     if (was_at_bottom && messages.size() > 0) {
@@ -338,21 +383,39 @@ void Console::update(sf::RenderWindow& window, float dt) {
         clamp_scroll();
     }
 
+    suggestion_text->setString("");
+    suggestion_text->setCharacterSize(char_size);
     if (!input_string.empty()) {
         auto suggestions = get_suggestions(input_string);
         if (!suggestions.empty()) {
-            suggestion_text->setString(suggestions[0]);
+            std::string combined;
+
+            if (suggestions.size() == 1) combined = suggestions[0];
+            else {
+                for (auto s : suggestions) combined += s + "\n";
+            }
+
+            suggestion_text->setString(combined);
+            sf::Vector2f suggestion_text_size = suggestion_text->getLocalBounds().size;
             suggestion_text->setPosition({
                 input_rect_text->getPosition().x,
-                input_rect.getPosition().y - 25.f
+                input_rect.getPosition().y - suggestion_text_size.y - char_size
             });
-        } else {
-            suggestion_text->setString("");
+
+            static float suggestion_rect_offset = 5.f; 
+            suggestion_rect.setSize({
+                suggestion_text_size.x + suggestion_rect_offset,
+                suggestion_text_size.y + suggestion_rect_offset,
+            });
+
+            sf::Vector2f suggestion_text_pos = suggestion_text->getPosition();
+            suggestion_rect.setPosition({
+                suggestion_text_pos.x - (suggestion_rect_offset / 2.f),
+                suggestion_text_pos.y - (suggestion_rect_offset / 2.f)
+            });
         }
-    } else {
-        suggestion_text->setString("");
     }
-    suggestion_text->setCharacterSize(char_size - 2);
+    //
 }
 
 void Console::render(sf::RenderWindow& window) {
@@ -368,14 +431,9 @@ void Console::render(sf::RenderWindow& window) {
         window.draw(cursor_rect);
     }
     
-    if (suggestion_text && !suggestion_text->getString().isEmpty()) {
-        window.draw(*suggestion_text);
-    }
-    
     sf::View original_view = window.getView();
     
-    float window_width = static_cast<float>(Singleton::Variables::WINDOW_SIZE.x);
-    float window_height = static_cast<float>(Singleton::Variables::WINDOW_SIZE.y);
+    sf::Vector2f window_size = static_cast<sf::Vector2f>(window.getSize());
     
     float view_top = head_rect.getSize().y + 5.f;
     float view_height = input_rect.getPosition().y - head_rect.getSize().y - 15.f;
@@ -383,18 +441,23 @@ void Console::render(sf::RenderWindow& window) {
     if (view_height > 0.f) {
         sf::View console_view(sf::FloatRect(
             sf::Vector2f(0.f, view_top),
-            sf::Vector2f(window_width, view_height)
+            sf::Vector2f(window_size.x, view_height)
         ));
         
         console_view.setViewport(sf::FloatRect(
-            sf::Vector2f(0.f, view_top / window_height),
-            sf::Vector2f(1.f, view_height / window_height)
+            sf::Vector2f(0.f, view_top / window_size.y),
+            sf::Vector2f(1.f, view_height / window_size.y)
         ));
         
         window.setView(console_view);
         window.draw(*output_text);
     }
     
+    if (suggestion_text && !suggestion_text->getString().isEmpty()) {
+        window.draw(suggestion_rect);
+        window.draw(*suggestion_text);
+    }
+
     window.setView(original_view);
     
     if (max_scroll > 0.f) {
@@ -500,7 +563,7 @@ void Console::register_default_commands() {
         "Set console foreground color",
         "console.foreground_color <r g b a>"
     );
-
+    
     register_command(
         "console.background_color",
         [this](const std::vector<std::string>& args) {
@@ -542,10 +605,11 @@ void Console::add_to_history(const std::string& command) {
     history_index = -1;
 }
 
-void Console::update_scrollbar() {
+void Console::update_scrollbar(sf::RenderWindow& window) {
     float total_text_height = output_text->getLocalBounds().size.y;
     float viewport_height = input_rect.getPosition().y - head_rect.getSize().y - 15.f;
-    
+    sf::Vector2f window_size = static_cast<sf::Vector2f>(window.getSize());
+
     if (viewport_height <= 0.f) {
         max_scroll = 0.f;
         return;
@@ -561,13 +625,13 @@ void Console::update_scrollbar() {
         
         scrollbar_track.setSize({8.f, track_height});
         scrollbar_track.setPosition({
-            static_cast<float>(Singleton::Variables::WINDOW_SIZE.x) - 18.f,
+            window_size.x - 18.f,
             head_rect.getSize().y + 5.f
         });
         
         scrollbar_thumb.setSize({8.f, thumb_height});
         scrollbar_thumb.setPosition({
-            static_cast<float>(Singleton::Variables::WINDOW_SIZE.x) - 18.f,
+            window_size.x - 18.f,
             scrollbar_track.getPosition().y + thumb_pos
         });
     }
