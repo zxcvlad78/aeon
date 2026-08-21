@@ -172,32 +172,26 @@ void Console::autocomplete() {
     if (input_string.empty()) return;
     
     auto suggestions = get_suggestions(input_string);
-    input_string = suggestions[0] + " ";
-    cursor_position = input_string.length();
 
-    // if (suggestions.size() == 1) {
-    //     input_string = suggestions[0] + " ";
-    //     cursor_position = input_string.length();
-    // } else if (suggestions.size() > 1) {
-    //     std::string common_prefix = suggestions[0];
-    //     for (size_t i = 1; i < suggestions.size(); ++i) {
-    //         size_t j = 0;
-    //         while (j < common_prefix.length() && j < suggestions[i].length() && 
-    //                common_prefix[j] == suggestions[i][j]) {
-    //             j++;
-    //         }
-    //         common_prefix = common_prefix.substr(0, j);
-    //     }
+    if (suggestions.size() == 1) {
+        input_string = suggestions[0] + " ";
+    } else if (suggestions.size() > 1) {
+        std::string common_prefix = suggestions[0];
+        for (size_t i = 1; i < suggestions.size(); ++i) {
+            size_t j = 0;
+            while (j < common_prefix.length() && j < suggestions[i].length() && 
+                   common_prefix[j] == suggestions[i][j]) {
+                j++;
+            }
+            common_prefix = common_prefix.substr(0, j);
+        }
         
-    //     if (common_prefix.length() > input_string.length()) {
-    //         input_string = common_prefix;
-    //         cursor_position = input_string.length();
-    //     } else {
-    //         std::string hint = "Suggestions: ";
-    //         for (const auto& s : suggestions) hint += s + " ";
-    //         print(hint, sf::Color(150, 150, 200));
-    //     }
-    // }
+        if (common_prefix.length() > input_string.length()) {
+            input_string = common_prefix;
+        }
+    }
+
+    cursor_position = input_string.length();
 }
 
 void Console::handle_event(const sf::Event& event, sf::RenderWindow& window) {
